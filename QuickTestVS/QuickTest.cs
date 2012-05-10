@@ -110,6 +110,55 @@ namespace QuickTest
 			var x = new XmlSerializer (typeof (TestPlan));
 			return (TestPlan)x.Deserialize (reader);
 		}
+
+		public void Run ()
+		{
+			AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler (CurrentDomain_AssemblyResolve);
+			var asm = Assembly.LoadFrom (AssemblyPath);
+
+			foreach (var a in asm.GetReferencedAssemblies ()) {
+				try {
+					Assembly.Load (a);
+				}
+				catch (Exception) {
+				}			
+			}
+
+			foreach (var t in Tests) {
+				t.Run ();
+			}
+		}
+
+		List<IGrouping<string, string>> _referenceAssemblies;
+
+		/// <summary>
+		/// http://blogs.msdn.com/b/msbuild/archive/2007/04/12/new-reference-assemblies-location.aspx
+		/// </summary>
+		void AddReferenceAssemblies ()
+		{
+			var dir = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "Reference Assemblies");
+			var dlls = Directory.EnumerateFiles (dir, "*.dll", SearchOption.AllDirectories);
+			_referenceAssemblies = dlls.GroupBy (x => Path.GetFileNameWithoutExtension (x)).ToList ();
+		}
+
+		System.Reflection.Assembly CurrentDomain_AssemblyResolve (object sender, ResolveEventArgs args)
+		{
+			if (_referenceAssemblies == null) {
+				AddReferenceAssemblies ();
+			}
+
+			var name = args.Name;
+
+			foreach (var ra in _referenceAssemblies) {
+				if (args.Name.StartsWith (ra.Key)) {
+					foreach (var raa in ra) {
+						return Assembly.LoadFrom (raa);
+					}
+				}
+			}
+
+			return null;
+		}
 	}
 
 	[Serializable]
@@ -344,7 +393,9 @@ namespace QuickTest
 		{
 			if (string.IsNullOrEmpty (typeFullName)) throw new ArgumentNullException ("typeFullName");
 
-			foreach (var a in AppDomain.CurrentDomain.GetAssemblies ()) {
+			var asms = AppDomain.CurrentDomain.GetAssemblies ();
+
+			foreach (var a in asms) {
 				var type = a.GetType (typeFullName);
 				if (type != null) return type;
 			}
