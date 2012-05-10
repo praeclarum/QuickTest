@@ -63,7 +63,7 @@ namespace QuickTest
 
 			if (funcElm == null) return;
 
-			if (_funcElm == null || funcElm.FullName != _funcElm.FullName) {
+			if (_funcElm == null || GetMemberName (funcElm) != _tests.Member) {
 				_funcElm = funcElm;
 
 				SetMember ();
@@ -137,11 +137,102 @@ namespace QuickTest
 			// Fetch the tests
 			//
 			var repo = SetProject (_funcElm.ProjectItem.ContainingProject);
-			var memberName = _funcElm.FullName;
+			var memberName = GetMemberName (_funcElm);
 			_tests = repo.GetMemberTests (memberName);
 			foreach (var t in _tests.Tests) {
 				t.TestType = _testType;
 				t.Member = memberName;
+			}
+		}
+
+		class CodeElementInfo
+		{
+			public string Name;
+			public vsCMElement Kind;
+			public override string ToString ()
+			{
+				return Kind + " " + Name;
+			}
+			public bool IsType
+			{
+				get
+				{
+					return Kind == vsCMElement.vsCMElementClass ||
+						Kind == vsCMElement.vsCMElementInterface ||
+						Kind == vsCMElement.vsCMElementEnum ||
+						Kind == vsCMElement.vsCMElementStruct ||
+						Kind == vsCMElement.vsCMElementUnion;
+				}
+			}
+		}
+
+		static List<CodeElementInfo> GetChain (dynamic member)
+		{
+			var chain = new List<CodeElementInfo> ();
+			try {
+				dynamic e = member;
+				while (e != null && (int)e.Kind <= 12) {
+					chain.Add (new CodeElementInfo { Name = e.Name, Kind = (vsCMElement)(int)e.Kind });
+					try {
+						e = e.Parent;
+					}
+					catch (Exception) {
+						try {
+							e = e.Parent2;
+						}
+						catch (Exception) {
+							e = null;
+						}
+					}
+				}
+			}
+			catch (Exception) {
+			}
+			chain.Reverse ();
+			return chain;
+		}
+
+		static string GetChainName (IEnumerable<CodeElementInfo> chainQuery)
+		{
+			var chain = chainQuery.ToList ();
+			var sb = new StringBuilder ();
+			for (var i = 0; i < chain.Count; i++) {
+				if (sb.Length == 0) {
+					sb.Append (chain[i].Name);
+				}
+				else {
+					if (string.IsNullOrWhiteSpace (chain[i].Name)) {
+					}
+					else if (chain[i].Name == chain[i - 1].Name) {
+					}
+					else if (chain[i].IsType && chain[i - 1].IsType) {
+						sb.Append ("+");
+						sb.Append (chain[i].Name);
+					}
+					else {
+						sb.Append (".");
+						sb.Append (chain[i].Name);
+					}
+				}
+			}
+			return sb.ToString ();
+		}
+
+		static string GetMemberName (CodeFunction member)
+		{
+			return GetChainName (GetChain (member));
+		}
+
+		static string GetTypeName (CodeTypeRef type)
+		{
+			var elm = type.CodeType;
+			if (elm != null) {
+				var chain = GetChain (elm);
+				var name = GetChainName (chain.TakeWhile (x => x.Kind == vsCMElement.vsCMElementNamespace || x.IsType));
+				return name;
+			}
+			else {
+				return type.AsFullName;
 			}
 		}
 
@@ -487,7 +578,7 @@ namespace QuickTest
 				var pi = new ParamInfo {
 					Name = "value",
 					ColIndex = Grid.Columns.Count,
-					ParameterType = _funcElm.Type.AsFullName,
+					ParameterType = GetTypeName (_funcElm.Type),
 				};
 				_paramInfos.Add (pi);
 				Grid.Columns.Add (pi.Name, pi.Name);
@@ -497,7 +588,7 @@ namespace QuickTest
 					var pi = new ParamInfo {
 						Name = p.Name,
 						ColIndex = Grid.Columns.Count,
-						ParameterType = p.Type.AsFullName,
+						ParameterType = GetTypeName (p.Type),
 					};
 					_paramInfos.Add (pi);
 					Grid.Columns.Add (pi.Name, pi.Name);
