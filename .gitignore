@@ -1,0 +1,10 @@
+*.suo
+*.user
+QuickTestVS/bin/
+QuickTestVS/obj/
+QuickTestTest/bin/
+QuickTestTest/obj/
+QuickTestRunner/bin/
+QuickTestRunner/obj/
+TestResults/
+
