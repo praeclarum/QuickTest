@@ -606,6 +606,12 @@ namespace QuickTest
 		object _obj;
 		Type _objType;
 
+		public EvalEnv ()
+		{
+			_obj = null;
+			_objType = typeof (object);
+		}
+
 		public EvalEnv (object obj, Type objType)
 		{
 			_obj = obj;
@@ -721,14 +727,30 @@ namespace QuickTest
 		static Expression ParseMultiplicative (Token[] toks, ref int p)
 		{
 			var end = toks.Length;
-			var e = ParsePrimary (toks, ref p);
+			var e = ParseUnary (toks, ref p);
 			while (p < end && (toks[p].Type == TokenType.Multiply || toks[p].Type == TokenType.Divide)) {
 				var op = toks[p].Type;
 				p++;
-				var o = ParsePrimary (toks, ref p);
+				var o = ParseUnary (toks, ref p);
 				e = new BinOpExpression (op, e, o);
 			}
 			return e;
+		}
+
+		static Expression ParseUnary (Token[] toks, ref int p)
+		{
+			var end = toks.Length;
+
+			var t = toks[p];
+			if (t.Type == TokenType.Subtract) {
+				var op = t.Type;
+				p++;
+				var e = ParsePrimary (toks, ref p);
+				return new UnOpExpression (op, e);
+			}
+			else {
+				return ParsePrimary (toks, ref p);
+			}
 		}
 
 		static Expression ParsePrimary (Token[] toks, ref int p)
@@ -851,6 +873,47 @@ namespace QuickTest
 		}
 	}
 
+	class UnOpExpression : Expression
+	{
+		public readonly TokenType Operator;
+		public readonly Expression Value;
+
+		public UnOpExpression (TokenType op, Expression value)
+		{
+			Operator = op;
+			Value = value;
+		}
+
+		public override object Eval (EvalEnv env)
+		{
+			var a = Value.Eval (env);
+
+			if (a is double) {
+				if (Operator == TokenType.Subtract) return -(double)a;
+			}
+			else if (a is float) {
+				if (Operator == TokenType.Subtract) return -(float)a;
+			}
+			else if (a is decimal) {
+				if (Operator == TokenType.Subtract) return -(decimal)a;
+			}
+			else if (a is ulong) {
+				if (Operator == TokenType.Subtract) throw new NotSupportedException ("Cannot negate UInt64");
+			}
+			else if (a is long) {
+				if (Operator == TokenType.Subtract) return -(long)a;
+			}
+			else if (a is uint) {
+				if (Operator == TokenType.Subtract) return -(uint)a;
+			}
+			else {
+				if (Operator == TokenType.Subtract) return -Convert.ToInt32 (a);
+			}
+
+			throw new NotImplementedException (Operator.ToString ());
+		}
+	}
+
 	class BinOpExpression : Expression
 	{
 		public readonly TokenType Operator;
@@ -871,10 +934,107 @@ namespace QuickTest
 			switch (Operator) {
 			case TokenType.LogicalAnd:
 				return (bool)left && (bool)Right.Eval (env);
+			case TokenType.LogicalOr:
+				return (bool)left || (bool)Right.Eval (env);
 			case TokenType.Equal:
 				return left.Equals (Right.Eval (env));
+			case TokenType.Add:
+				return Add (left, Right.Eval (env));
+			case TokenType.Subtract:
+				return Subtract (left, Right.Eval (env));
+			case TokenType.Multiply:
+				return Multiply (left, Right.Eval (env));
+			case TokenType.Divide:
+				return Divide (left, Right.Eval (env));
 			default:
 				throw new NotImplementedException (Operator.ToString ());
+			}
+		}
+
+		static object Add (object a, object b)
+		{
+			if (a is string || b is string) {
+				return a + "" + b;
+			}
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (a is double) return (double)pa + (double)pb;
+			else if (a is float) return (float)pa + (float)pb;
+			else if (a is decimal) return (decimal)pa + (decimal)pb;
+			else if (a is ulong) return (ulong)pa + (ulong)pb;
+			else if (a is long) return (long)pa + (long)pb;
+			else if (a is uint) return (uint)pa + (uint)pb;
+			else return (int)pa + (int)pb;
+		}
+
+		static object Subtract (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (a is double) return (double)pa - (double)pb;
+			else if (a is float) return (float)pa - (float)pb;
+			else if (a is decimal) return (decimal)pa - (decimal)pb;
+			else if (a is ulong) return (ulong)pa - (ulong)pb;
+			else if (a is long) return (long)pa - (long)pb;
+			else if (a is uint) return (uint)pa - (uint)pb;
+			else return (int)pa - (int)pb;
+		}
+
+		static object Multiply (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (a is double) return (double)pa * (double)pb;
+			else if (a is float) return (float)pa * (float)pb;
+			else if (a is decimal) return (decimal)pa * (decimal)pb;
+			else if (a is ulong) return (ulong)pa * (ulong)pb;
+			else if (a is long) return (long)pa * (long)pb;
+			else if (a is uint) return (uint)pa * (uint)pb;
+			else return (int)pa * (int)pb;
+		}
+
+		static object Divide (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (a is double) return (double)pa / (double)pb;
+			else if (a is float) return (float)pa / (float)pb;
+			else if (a is decimal) return (decimal)pa / (decimal)pb;
+			else if (a is ulong) return (ulong)pa / (ulong)pb;
+			else if (a is long) return (long)pa / (long)pb;
+			else if (a is uint) return (uint)pa / (uint)pb;
+			else return (int)pa / (int)pb;
+		}
+
+		static void Promote (object a, object b, out object pa, out object pb)
+		{
+			if (a is double || b is double) {
+				pa = Convert.ToDouble (a);
+				pb = Convert.ToDouble (b);
+			}
+			else if (a is float || b is float) {
+				pa = Convert.ToSingle (a);
+				pb = Convert.ToSingle (b);
+			}
+			else if (a is decimal || b is decimal) {
+				pa = Convert.ToDecimal (a);
+				pb = Convert.ToDecimal (b);
+			}
+			else if (a is ulong || b is ulong) {
+				pa = Convert.ToUInt64 (a);
+				pb = Convert.ToUInt64 (b);
+			}
+			else if (a is long || b is long) {
+				pa = Convert.ToInt64 (a);
+				pb = Convert.ToInt64 (b);
+			}
+			else if (a is uint || b is uint) {
+				pa = Convert.ToUInt32 (a);
+				pb = Convert.ToUInt32 (b);
+			}
+			else {
+				pa = Convert.ToInt32 (a);
+				pb = Convert.ToInt32 (b);
 			}
 		}
 	}
@@ -1047,7 +1207,7 @@ namespace QuickTest
 
 				var ch = src[p];
 
-				if (ch == '{' || ch == '(' || ch == '}' || ch == ')' || ch == ',' || ch == ':' || ch == '+' || ch == '*' || ch == '/') {
+				if (ch == '{' || ch == '(' || ch == '}' || ch == ')' || ch == ',' || ch == ':' || ch == '+' || ch == '*' || ch == '/' || ch == '-') {
 					yield return new Token ((TokenType)ch, src, p, 1);
 					p += 1;
 				}
@@ -1057,16 +1217,6 @@ namespace QuickTest
 					}
 					else {
 						yield return new Token (TokenType.Dot, src, p, 1);
-						p += 1;
-					}
-				}
-				else if (ch == '-') {
-
-					if (p + 1 < end && (char.IsDigit (src[p + 1]) || src[p+1] == '.')) {
-						yield return TokenizeNumber (src, ref p);
-					}
-					else {
-						yield return new Token (TokenType.Subtract, src, p, 1);
 						p += 1;
 					}
 				}

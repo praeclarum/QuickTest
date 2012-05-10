@@ -37,19 +37,6 @@ namespace QuickTest.Tests
 		}
 
 		[TestMethod]
-		public void Minuses ()
-		{
-			var toks = Token.Tokenize ("-.1e-9--6").ToList ();
-			Assert.AreEqual (3, toks.Count);
-			Assert.AreEqual (TokenType.Number, toks[0].Type);
-			Assert.AreEqual ("-.1e-9", toks[0].ToString ());
-			Assert.AreEqual (TokenType.Subtract, toks[1].Type);
-			Assert.AreEqual ("-", toks[1].ToString ());
-			Assert.AreEqual (TokenType.Number, toks[2].Type);
-			Assert.AreEqual ("-6", toks[2].ToString ());
-		}
-
-		[TestMethod]
 		public void Identifier ()
 		{
 			var toks = Token.Tokenize ("__HelloWorld069").ToList ();

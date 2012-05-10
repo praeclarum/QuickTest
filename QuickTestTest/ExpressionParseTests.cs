@@ -38,6 +38,18 @@ namespace QuickTest.Tests
 		}
 
 		[TestMethod]
+		public void ObjectLiteralExpression ()
+		{
+			var expr = Expression.Parse ("{foo:4-2}");
+			Assert.IsInstanceOfType (expr, typeof (ObjectLiteralExpression));
+			var e = (ObjectLiteralExpression)expr;
+
+			Assert.AreEqual (1, e.Assignments.Count);
+			Assert.AreEqual ("foo", e.Assignments[0].Name);
+			Assert.IsInstanceOfType (e.Assignments[0].Value, typeof (BinOpExpression));
+		}
+
+		[TestMethod]
 		public void ObjectLiteralCSharp ()
 		{
 			var expr = Expression.Parse ("{foo=42,bar=23}");
@@ -226,6 +238,16 @@ namespace QuickTest.Tests
 			Assert.IsInstanceOfType (e.Left, typeof (ConstantExpression));
 			Assert.IsInstanceOfType (e.Right, typeof (BinOpExpression));
 			Assert.AreEqual (TokenType.Multiply, ((BinOpExpression)e.Right).Operator);
+		}
+
+		[TestMethod]
+		public void Negate ()
+		{
+			var expr = Expression.Parse ("-(a + b)");
+			Assert.IsInstanceOfType (expr, typeof (UnOpExpression));
+			var e = (UnOpExpression)expr;
+			Assert.AreEqual (TokenType.Subtract, e.Operator);
+			Assert.IsInstanceOfType (e.Value, typeof (BinOpExpression));
 		}
 	}
 }
