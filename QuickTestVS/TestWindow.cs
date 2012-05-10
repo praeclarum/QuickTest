@@ -70,6 +70,8 @@ namespace QuickTest
 
 				DisplayFunction ();
 			}
+
+			RunAllRows ();
 		}
 
 		string _projectPath;
