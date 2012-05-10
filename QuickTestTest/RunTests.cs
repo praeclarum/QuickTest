@@ -153,5 +153,19 @@ namespace QuickTest.Tests
 			t.Run ();
 			Assert.AreEqual (TestResult.Pass, t.Result, t.FailInfo);
 		}
+
+		[TestMethod]
+		public void FailInfoCodeRef ()
+		{
+			var t = new Test {
+				FailInfo = @"System.NullReferenceException: Object reference not set to an instance of an object.
+   at Circuit.CircuitPoint.SetLocation(CircuitPoint other) in C:\Projects\Circuit\CircuitLib\Point.cs:line 59",
+			};
+
+			var f = t.GetFailCodeReference ();
+
+			Assert.AreEqual (@"C:\Projects\Circuit\CircuitLib\Point.cs", f.Path);
+			Assert.AreEqual (59, f.Line);
+		}
 	}
 }

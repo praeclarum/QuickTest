@@ -753,5 +753,33 @@ namespace QuickTest
 		{
 			RunAllRows ();
 		}
+
+		private void Grid_DoubleClick (object sender, EventArgs e)
+		{
+			try {
+				if (_funcElm == null) return;
+
+				var dte = _funcElm.DTE;
+
+				var c = Grid.SelectedCells.Cast<DataGridViewCell> ().FirstOrDefault ();
+				if (c == null) return;
+				var row = Grid.Rows[c.RowIndex];
+				var t = row.Tag as Test;
+				if (t == null) return;
+
+				if (!string.IsNullOrEmpty (t.FailInfo)) {
+					var f = t.GetFailCodeReference ();
+					if (f != null) {
+						var window = _funcElm.DTE.ItemOperations.OpenFile (f.Path, Constants.vsViewKindCode);
+						var doc = dte.ActiveDocument;
+						var ts = doc.Selection as TextSelection;
+						ts.GotoLine (f.Line);
+						ts.SelectLine ();
+					}
+				}
+			}
+			catch (Exception) {
+			}
+		}
 	}
 }

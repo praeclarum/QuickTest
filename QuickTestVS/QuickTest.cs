@@ -563,6 +563,35 @@ namespace QuickTest
 			ValueType = r.ValueType;
 			FailInfo = r.FailInfo;
 		}
+
+		public CodeReference GetFailCodeReference ()
+		{
+			var lineI = FailInfo.IndexOf (":line ");
+			
+			if (lineI > 0) {
+				var inI = FailInfo.Substring (0, lineI).LastIndexOf ("in ");
+				if (inI >= 0) {
+					var cr = new CodeReference ();
+					cr.Path = FailInfo.Substring (inI + 3, lineI - inI - 3);
+					var lineSI = lineI + 6;
+					var p = lineSI;
+					var end = FailInfo.Length;
+					while (p < end && char.IsDigit (FailInfo[p])) p++;
+					if (p > lineSI) {
+						cr.Line = int.Parse (FailInfo.Substring (lineSI, p - lineSI));
+					}
+					return cr;
+				}
+			}
+
+			return null;
+		}
+	}
+
+	public class CodeReference
+	{
+		public string Path;
+		public int Line;
 	}
 
 	public enum TestResult
