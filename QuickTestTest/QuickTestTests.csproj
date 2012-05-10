@@ -50,6 +50,7 @@
       <Link>QuickTest.cs</Link>
     </Compile>
     <Compile Include="ExpressionParseTests.cs" />
+    <Compile Include="StringMatrixTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunTests.cs" />
     <Compile Include="TokenizeTests.cs" />

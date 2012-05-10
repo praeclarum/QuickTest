@@ -1253,4 +1253,160 @@ namespace QuickTest
 			return new Token (TokenType.Identifier, src, startIndex, length);
 		}
 	}
+
+	public class StringMatrix
+	{
+		public List<List<string>> Rows;
+
+		public StringMatrix (int numRows, int numCols)
+		{
+			Rows = new List<List<string>> ();
+			for (var ri = 0; ri < numRows; ri++) {
+				var row = new List<string> ();
+				for (var ci = 0; ci < numCols; ci++) {
+					row.Add ("");
+				}
+				Rows.Add (row);
+			}
+		}
+
+		StringMatrix ()
+		{
+		}
+
+		static bool NeedsQuoting (string src)
+		{
+			for (var i = 0; i < src.Length; i++) {
+				if (src[i] < ' ') return true;
+			}
+			return false;
+		}
+
+		public string Tsv
+		{
+			get
+			{
+				var sb = new StringBuilder ();
+				foreach (var r in Rows) {
+					var head = "";
+					foreach (var c in r) {
+						sb.Append (head);
+						if (NeedsQuoting (c)) {
+							sb.Append ('\"');
+							foreach (var ch in c) {
+								if (ch == '\"') {
+									sb.Append ("\"\"");
+								}
+								else {
+									sb.Append (ch);
+								}
+							}
+							sb.Append ('\"');
+						}
+						else {
+							sb.Append (c);
+						}
+						head = "\t";
+					}
+					sb.Append ("\r\n");
+				}
+				return sb.ToString ();
+			}
+		}
+
+		public static StringMatrix FromTsv (string src)
+		{
+			var p = 0;
+			var end = src.Length;
+
+			var rows = new List<List<string>> ();
+			var row = new List<string> ();
+			rows.Add (row);
+
+			while (p < end) {
+				var ch = src[p];
+				if (ch == '\"') {
+					row.Add (ParseQuotedTsvCell (src, ref p));
+				}
+				else if (ch == '\r') {
+					if (p + 1 < end && src[p + 1] == '\n') {
+						p += 2;
+					}
+					else {
+						p += 1;
+					}
+					row = new List<string> ();
+					rows.Add (row);
+				}
+				else if (ch == '\n') {
+					p += 1;
+					row = new List<string> ();
+					rows.Add (row);
+				}
+				else {
+					row.Add (ParseNormalTsvCell (src, ref p));
+				}
+			}
+
+			if (row.Count == 0) {
+				rows.RemoveAt (rows.Count - 1);
+			}
+
+			return new StringMatrix { Rows = rows, };
+		}
+
+		static string ParseQuotedTsvCell (string src, ref int p)
+		{
+			var val = new StringBuilder ();
+			var startIndex = p;
+			var end = src.Length;
+			p++; // Move past the \"
+			var neededQuotes = false;
+			while (p < end) {
+
+				var ch = src[p];
+				if (ch == '\"') {
+					if (p < end && src[p + 1] == '\"') {
+						neededQuotes = true;
+						val.Append ('\"');
+						p += 2;
+					}
+					else {
+						break;
+					}
+				}
+				else {
+					neededQuotes = neededQuotes || src[p] < ' ';
+					val.Append (src[p]);
+					p++;
+				}
+			}
+			p++; // Move past the \"
+			p++; // Move past the \t
+			var r = val.ToString ();
+			return neededQuotes ? r : '\"' + r + '\"';
+		}
+
+		static string ParseNormalTsvCell (string src, ref int p)
+		{
+			var val = new StringBuilder ();
+			var startIndex = p;
+			var end = src.Length;
+			while (p < end) {
+				var ch = src[p];
+				if (ch == '\t') {
+					p++;
+					break;
+				}
+				else if (ch == '\r' || ch == '\n') {
+					break;
+				}
+				else {
+					val.Append (src[p]);
+					p++;
+				}
+			}
+			return val.ToString ();
+		}
+	}
 }

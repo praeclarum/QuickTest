@@ -30,6 +30,8 @@
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TestWindow));
 			this.Grid = new System.Windows.Forms.DataGridView();
+			this.GridMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.deleteTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.StatusButton = new System.Windows.Forms.Button();
 			this.AllImages = new System.Windows.Forms.ImageList(this.components);
@@ -38,12 +40,10 @@
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.button1 = new System.Windows.Forms.Button();
 			this.MemberBox = new System.Windows.Forms.ComboBox();
-			this.GridMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-			this.deleteTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.Grid)).BeginInit();
+			this.GridMenu.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.panel2.SuspendLayout();
-			this.GridMenu.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// Grid
@@ -64,6 +64,21 @@
 			this.Grid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.Grid_CellEndEdit);
 			this.Grid.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.Grid_RowsAdded);
 			this.Grid.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.Grid_RowsRemoved);
+			this.Grid.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Grid_KeyDown);
+			// 
+			// GridMenu
+			// 
+			this.GridMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteTestToolStripMenuItem});
+			this.GridMenu.Name = "GridMenu";
+			this.GridMenu.Size = new System.Drawing.Size(153, 48);
+			// 
+			// deleteTestToolStripMenuItem
+			// 
+			this.deleteTestToolStripMenuItem.Name = "deleteTestToolStripMenuItem";
+			this.deleteTestToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.deleteTestToolStripMenuItem.Text = "&Delete Test";
+			this.deleteTestToolStripMenuItem.Click += new System.EventHandler(this.deleteTestToolStripMenuItem_Click);
 			// 
 			// panel1
 			// 
@@ -156,20 +171,6 @@
 			this.MemberBox.Size = new System.Drawing.Size(281, 23);
 			this.MemberBox.TabIndex = 1;
 			// 
-			// GridMenu
-			// 
-			this.GridMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.deleteTestToolStripMenuItem});
-			this.GridMenu.Name = "GridMenu";
-			this.GridMenu.Size = new System.Drawing.Size(153, 48);
-			// 
-			// deleteTestToolStripMenuItem
-			// 
-			this.deleteTestToolStripMenuItem.Name = "deleteTestToolStripMenuItem";
-			this.deleteTestToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-			this.deleteTestToolStripMenuItem.Text = "&Delete Test";
-			this.deleteTestToolStripMenuItem.Click += new System.EventHandler(this.deleteTestToolStripMenuItem_Click);
-			// 
 			// TestWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -181,10 +182,10 @@
 			this.Name = "TestWindow";
 			this.Size = new System.Drawing.Size(322, 327);
 			((System.ComponentModel.ISupportInitialize)(this.Grid)).EndInit();
+			this.GridMenu.ResumeLayout(false);
 			this.panel1.ResumeLayout(false);
 			this.panel1.PerformLayout();
 			this.panel2.ResumeLayout(false);
-			this.GridMenu.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}

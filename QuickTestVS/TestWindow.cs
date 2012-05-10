@@ -395,6 +395,14 @@ namespace QuickTest
 			var nargs = _paramInfos.Count;
 
 			foreach (var rowIndex in rowIndices) {
+				var row = Grid.Rows[rowIndex];
+				if (row.Tag == null) {
+					var rt = new Test {
+						Id = Guid.NewGuid (),
+					};
+					_tests.Tests.Add (rt);
+					row.Tag = rt;
+				}
 				var t = ParseRow (rowIndex);
 				plan.Tests.Add (t);
 				SetRowUnkownColor (rowIndex);
@@ -647,6 +655,8 @@ namespace QuickTest
 			}
 		}
 
+
+
 		private void Grid_CellEndEdit (object sender, DataGridViewCellEventArgs e)
 		{
 			if (_funcElm == null) return;
@@ -656,13 +666,7 @@ namespace QuickTest
 			if (e.ColumnIndex == _resultColIndex) {
 				row.Cells[_expectedColIndex].Value = row.Cells[_resultColIndex].Value;
 			}
-			if (row.Tag == null) {
-				var t = new Test {
-					Id = Guid.NewGuid (),
-				};
-				_tests.Tests.Add (t);
-				row.Tag = t;
-			}
+			
 			RunRows (new[] { e.RowIndex });
 		}
 
@@ -688,6 +692,79 @@ namespace QuickTest
 				Grid.Rows.Remove (t.Row);
 			}
 			UpdateStats ();
+		}
+
+		private void Grid_KeyDown (object sender, KeyEventArgs e)
+		{
+			if (e.Control && e.KeyCode == Keys.V) {
+				int rowIndex = 0;
+				int colIndex = 0;
+				if (Grid.SelectedCells.Count > 0) {
+					rowIndex = int.MaxValue;
+					colIndex = int.MaxValue;
+					foreach (DataGridViewCell c in Grid.SelectedCells) {
+						rowIndex = Math.Min (c.RowIndex, rowIndex);
+						colIndex = Math.Min (c.ColumnIndex, colIndex);
+					}
+				}
+				PasteAt (rowIndex, colIndex);
+			}
+			else if (e.Control && e.KeyCode == Keys.C) {
+				if (Grid.SelectedCells.Count == 0) return;
+
+				var minRowIndex = int.MaxValue;
+				var minColIndex = int.MaxValue;
+				var maxRowIndex = int.MinValue;
+				var maxColIndex = int.MinValue;
+				foreach (DataGridViewCell c in Grid.SelectedCells) {
+					minRowIndex = Math.Min (c.RowIndex, minRowIndex);
+					minColIndex = Math.Min (c.ColumnIndex, minColIndex);
+					maxRowIndex = Math.Max (c.RowIndex, maxRowIndex);
+					maxColIndex = Math.Max (c.ColumnIndex, maxColIndex);
+				}
+
+				var m = new StringMatrix (maxRowIndex - minRowIndex + 1, maxColIndex - minColIndex + 1);
+
+				foreach (DataGridViewCell c in Grid.SelectedCells) {
+					var mri = c.RowIndex - minRowIndex;
+					var mci = c.ColumnIndex - minColIndex;
+					m.Rows[mri][mci] = GetCellText (c);
+				}
+
+				Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
+			}
+		}
+
+		void PasteAt (int rowIndex, int colIndex)
+		{
+			if (Grid.Columns.Count == 0) return;
+
+			var clip = Clipboard.GetDataObject ();
+			var data = clip.GetData (DataFormats.UnicodeText);
+			if (data == null) return;
+			var tsv = data.ToString ();
+
+			var m = StringMatrix.FromTsv (tsv);
+
+			var editedRows = new List<int> ();
+
+			for (var mri = 0; mri < m.Rows.Count; mri++) {
+				var ri = mri + rowIndex;
+				while (ri >= Grid.Rows.Count - 1) { // -1 to keep the insert row
+					Grid.Rows.Add ();
+				}
+				editedRows.Add (ri);
+				var r = Grid.Rows[ri];
+				var mr = m.Rows[mri];
+				for (var mci = 0; mci < mr.Count; mci++) {
+					var ci = colIndex + mci;
+					if (ci >= Grid.Columns.Count) continue;
+					if (Grid.Columns[ci].ReadOnly) continue;
+					r.Cells[ci].Value = mr[mci];
+				}
+			}
+
+			RunRows (editedRows);
 		}
 	}
 }
