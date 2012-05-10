@@ -185,6 +185,11 @@ namespace QuickTest
 				Test.WriteValue (value, s => { ValueString = s; }, t => { ValueType = t; });
 			}
 		}
+
+		public override string ToString ()
+		{
+			return ValueType + " " + Name + " = " + ValueString;
+		}
 	}
 
 	public enum TestType
@@ -485,11 +490,10 @@ namespace QuickTest
 			for (var i = 0; i < vals.Length; i++) {
 				var a = Arguments[i];
 				if (string.IsNullOrWhiteSpace (a.ValueString)) {
-					CreateObject (a.ValueType, a.ValueString, env);
+					vals[i] = CreateObject (a.ValueType, a.ValueString, env);
 				}
 				else {
 					var e = Expression.Parse (a.ValueString);
-
 					if (e is ObjectLiteralExpression) {
 						vals[i] = CreateObject (a.ValueType, (ObjectLiteralExpression)e, env);
 					}
