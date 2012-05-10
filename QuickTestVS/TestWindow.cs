@@ -170,6 +170,8 @@ namespace QuickTest
 				}
 
 				_projectRepo.Save (_repoPath);
+
+				File.Delete (testsPath);
 			}
 			catch (Exception) {
 			}
