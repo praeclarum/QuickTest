@@ -104,6 +104,7 @@
 			this.StatusButton.Size = new System.Drawing.Size(22, 22);
 			this.StatusButton.TabIndex = 3;
 			this.StatusButton.UseVisualStyleBackColor = false;
+			this.StatusButton.Click += new System.EventHandler(this.StatusButton_Click);
 			// 
 			// AllImages
 			// 

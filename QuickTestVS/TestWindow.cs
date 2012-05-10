@@ -28,7 +28,7 @@ namespace QuickTest
 
 		public void OnBuildDone ()
 		{
-			RunRows (Enumerable.Range (0, Grid.Rows.Count - 1));
+			RunAllRows ();
 		}
 
 		private void button1_Click (object sender, EventArgs e)
@@ -304,7 +304,6 @@ namespace QuickTest
 				var row = Grid.Rows[i];
 				if (row.Tag != null) {
 					BindRow (i);
-					UpdateRowColor (i);
 				}
 			}
 
@@ -366,24 +365,9 @@ namespace QuickTest
 			}
 		}
 
-		void UpdateRowColor (int rowIndex)
+		void RunAllRows ()
 		{
-			/*var r = GetRowResult (rowIndex);
-
-			if (r == TestResult.Unknown) {
-				SetRowUnkownColor (rowIndex);
-			}
-			else if (r == TestResult.Fail) {
-				Grid.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Firebrick;
-			}
-			else {
-				Grid.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Green;
-			}*/
-		}
-
-		void SetRowUnkownColor (int rowIndex)
-		{
-			Grid.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.Black;
+			RunRows (Enumerable.Range (0, Grid.Rows.Count - 1));
 		}
 
 		void RunRows (IEnumerable<int> rowIndices)
@@ -405,7 +389,6 @@ namespace QuickTest
 				}
 				var t = ParseRow (rowIndex);
 				plan.Tests.Add (t);
-				SetRowUnkownColor (rowIndex);
 			}
 
 			plan.AssemblyPath = GetAssemblyPath (_funcElm.ProjectItem.ContainingProject);
@@ -469,7 +452,6 @@ namespace QuickTest
 					var r = Grid.Rows[index];
 					r.Tag = t;
 					BindRow (index);
-					UpdateRowColor (index);
 					index++;
 				}
 			}
@@ -655,8 +637,6 @@ namespace QuickTest
 			}
 		}
 
-
-
 		private void Grid_CellEndEdit (object sender, DataGridViewCellEventArgs e)
 		{
 			if (_funcElm == null) return;
@@ -765,6 +745,11 @@ namespace QuickTest
 			}
 
 			RunRows (editedRows);
+		}
+
+		private void StatusButton_Click (object sender, EventArgs e)
+		{
+			RunAllRows ();
 		}
 	}
 }
