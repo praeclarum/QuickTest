@@ -213,8 +213,8 @@ namespace QuickTest
 		void UpdateStats ()
 		{
 			var stats = new int[3];
-			for (var i = 0; i < Grid.Rows.Count - 1; i++) {
-				stats[(int)GetRowResult (i)]++;
+			foreach (var t in _tests.Tests) {
+				stats[(int)t.Result]++;
 			}
 
 			var pass = stats[(int)TestResult.Pass];
@@ -565,6 +565,22 @@ namespace QuickTest
 
 		private void Grid_RowsRemoved (object sender, DataGridViewRowsRemovedEventArgs e)
 		{
+		}
+
+		private void deleteTestToolStripMenuItem_Click (object sender, EventArgs e)
+		{
+			var rowIndexes = Grid.SelectedCells.Cast<DataGridViewCell> ().Select (x => x.RowIndex).Distinct ();
+			var tests = (from i in rowIndexes
+						 let row = Grid.Rows[i]
+						 let t = row.Tag as Test
+						 where t != null
+						 select new { Row = row, Test = t, }).ToArray ();
+
+			foreach (var t in tests) {
+				_tests.Tests.Remove (t.Test);
+				Grid.Rows.Remove (t.Row);
+			}
+			UpdateStats ();
 		}
 	}
 }
