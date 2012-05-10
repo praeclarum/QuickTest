@@ -721,6 +721,9 @@ namespace QuickTest
 					else if (ident == "false") {
 						e = new ConstantExpression (false);
 					}
+					else if (ident == "null") {
+						e = new ConstantExpression (null);
+					}
 					else {
 						e = new VariableExpression (t.ToString ());
 					}

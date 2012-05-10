@@ -132,6 +132,15 @@ namespace QuickTest.Tests
 		}
 
 		[TestMethod]
+		public void Null ()
+		{
+			var expr = Expression.Parse ("null");
+			Assert.IsInstanceOfType (expr, typeof (ConstantExpression));
+			var e = (ConstantExpression)expr;
+			Assert.IsNull (e.Value);
+		}
+
+		[TestMethod]
 		public void False ()
 		{
 			var expr = Expression.Parse ("false");
