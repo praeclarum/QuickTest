@@ -220,7 +220,21 @@ namespace QuickTest
 
 		static string GetMemberName (CodeFunction member)
 		{
-			return GetChainName (GetChain (member));
+			var sb = new StringBuilder();
+			sb.Append (GetChainName (GetChain (member)));
+
+			var prop = member.Parent as CodeProperty;
+			if (prop == null) {
+				sb.Append ("(");
+				var head = "";
+				foreach (CodeParameter p in member.Parameters) {
+					sb.Append (head);
+					sb.Append (GetTypeName (p.Type));
+					head = ", ";
+				}
+				sb.Append (")");
+			}
+			return sb.ToString ();
 		}
 
 		static string GetTypeName (CodeTypeRef type)

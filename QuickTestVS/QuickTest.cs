@@ -279,7 +279,12 @@ namespace QuickTest
 
 		public void Run ()
 		{
-			var parts = Member.Split ('.');
+			var name = Member;
+			var pi = name.IndexOf ('(');
+			if (pi >= 0) {
+				name = name.Substring (0, pi);
+			}
+			var parts = name.Trim ().Split ('.');
 			var methodName = parts[parts.Length - 1];
 			var typeName = string.Join (".", parts.Take (parts.Length - 1));
 
@@ -479,6 +484,20 @@ namespace QuickTest
 		void InvokeMethod (object obj, Type objType, MemberInfo[] members)
 		{
 			var method = (MethodInfo)members[0];
+			if (members.Length > 0) {
+				foreach (var m in members.Cast<MethodInfo> ()) {
+					var ps = m.GetParameters ();
+					if (ps.Length != Arguments.Count) continue;
+					var match = true;
+					for (var i = 0; i < ps.Length && match; i++) {
+						match = ps[i].ParameterType.FullName == Arguments[i].ValueType;
+					}
+					if (match) {
+						method = m;
+						break;
+					}
+				}
+			}
 			var args = EvalArguments (obj, objType);
 			Value = method.Invoke (obj, args);
 		}
