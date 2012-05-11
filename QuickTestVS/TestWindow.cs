@@ -409,6 +409,8 @@ namespace QuickTest
 				plan.Tests.Add (t);
 			}
 
+			if (plan.Tests.Count == 0) return;
+
 			plan.AssemblyPath = GetAssemblyPath (_funcElm.ProjectItem.ContainingProject);
 			Progress.Visible = true;
 			SetStatus (InfoStatusIcon, "Test run in progress");
@@ -730,6 +732,16 @@ namespace QuickTest
 				}
 
 				Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
+			}
+			else if (e.KeyCode == Keys.Delete) {
+				var rows = new List<int> ();
+				foreach (DataGridViewCell c in Grid.SelectedCells) {
+					if (!Grid.Columns[c.ColumnIndex].ReadOnly) {
+						rows.Add (c.RowIndex);
+						c.Value = null;
+					}
+				}
+				RunRows (rows.Distinct ());
 			}
 		}
 
