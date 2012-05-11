@@ -13,7 +13,7 @@ namespace QuickTest.Tests
 		public void Add ()
 		{
 			var e = Expression.Parse ("3 + 2");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual (5, v);
 		}
@@ -22,7 +22,7 @@ namespace QuickTest.Tests
 		public void DividePromote ()
 		{
 			var e = Expression.Parse ("3.0 / 2");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual (1.5, v);
 		}
@@ -31,7 +31,7 @@ namespace QuickTest.Tests
 		public void AddStrings ()
 		{
 			var e = Expression.Parse ("\"3\" + \"2\"");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual ("32", v);
 		}
@@ -40,7 +40,7 @@ namespace QuickTest.Tests
 		public void Subtract ()
 		{
 			var e = Expression.Parse ("3 - 2");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual (1, v);
 		}
@@ -49,7 +49,7 @@ namespace QuickTest.Tests
 		public void Multiply ()
 		{
 			var e = Expression.Parse ("3 * 2");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual (6, v);
 		}
@@ -58,7 +58,7 @@ namespace QuickTest.Tests
 		public void Divide ()
 		{
 			var e = Expression.Parse ("3 / 2");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual (1, v);
 		}
@@ -67,7 +67,7 @@ namespace QuickTest.Tests
 		public void UnaryMinus ()
 		{
 			var e = Expression.Parse ("-3");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Eval (env);
 			Assert.AreEqual (-3, v);
 		}
@@ -76,7 +76,7 @@ namespace QuickTest.Tests
 		public void ObjectLiteralMath ()
 		{
 			var e = (ObjectLiteralExpression)Expression.Parse ("{a:3-2}");
-			var env = new EvalEnv ();
+			var env = new ObjectEvalEnv ();
 			var v = e.Assignments[0].Value.Eval (env);
 			Assert.AreEqual (1, v);
 		}

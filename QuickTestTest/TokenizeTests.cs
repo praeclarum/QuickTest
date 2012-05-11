@@ -46,6 +46,15 @@ namespace QuickTest.Tests
 		}
 
 		[TestMethod]
+		public void IdentifierDollar ()
+		{
+			var toks = Token.Tokenize ("$").ToList ();
+			Assert.AreEqual (1, toks.Count);
+			Assert.AreEqual (TokenType.Identifier, toks[0].Type);
+			Assert.AreEqual ("$", toks[0].ToString ());
+		}
+
+		[TestMethod]
 		public void ObjectLiteral ()
 		{
 			var toks = Token.Tokenize ("{foo:42,bar:23}").ToList ();

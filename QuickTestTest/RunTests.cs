@@ -44,6 +44,10 @@ namespace QuickTest.Tests
 			{
 				Location = loc;
 			}
+
+			public double Personality { get; set; }
+
+			public double GetPersonality () { return Personality; }
 		}
 
 
@@ -150,6 +154,45 @@ namespace QuickTest.Tests
 				TestType = TestType.Procedure,
 			};
 			t.Arguments.Add (new TestArgument { Name = "loc", ValueString = "{Lat=1,Lon=2}", ValueType = "QuickTest.Tests.RunTests+Location", });
+			t.Run ();
+			Assert.AreEqual (TestResult.Pass, t.Result, t.FailInfo);
+		}
+
+		[TestMethod]
+		public void DollarSignInAssertForPropertyGetters ()
+		{
+			var t = new Test {
+				Member = "QuickTest.Tests.RunTests+Person.Personality",
+				ThisString = "{ Personality:20 }",
+				AssertString = "$ > 15 && $ < 30",
+				TestType = TestType.PropertyGetter,
+			};
+			t.Run ();
+			Assert.AreEqual (TestResult.Pass, t.Result, t.FailInfo);
+		}
+
+		[TestMethod]
+		public void DollarSignInAssertForFunction ()
+		{
+			var t = new Test {
+				Member = "QuickTest.Tests.RunTests+Person.GetPersonality",
+				ThisString = "{ Personality:20 }",
+				AssertString = "$ > 15 && $ < 30",
+				TestType = TestType.Function,
+			};
+			t.Run ();
+			Assert.AreEqual (TestResult.Pass, t.Result, t.FailInfo);
+		}
+
+		[TestMethod]
+		public void ThisInAssert ()
+		{
+			var t = new Test {
+				Member = "QuickTest.Tests.RunTests+Person.Personality",
+				ThisString = "{ Personality:20 }",
+				AssertString = "this.Personality > 15 && this.Personality < 30",
+				TestType = TestType.PropertyGetter,
+			};
 			t.Run ();
 			Assert.AreEqual (TestResult.Pass, t.Result, t.FailInfo);
 		}

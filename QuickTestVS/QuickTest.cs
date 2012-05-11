@@ -385,7 +385,7 @@ namespace QuickTest
 		object AssignObject (object obj, Type objType, ObjectLiteralExpression literal, EvalEnv env)
 		{
 			if (env == null) {
-				env = new EvalEnv (obj, objType);
+				env = new ObjectEvalEnv (obj, objType);
 			}
 
 			foreach (var a in literal.Assignments) {
@@ -441,7 +441,7 @@ namespace QuickTest
 					return obj;
 				}
 				else {
-					return expr.Eval (new EvalEnv (null, null));
+					return expr.Eval (new ObjectEvalEnv ());
 				}
 			}
 		}
@@ -468,7 +468,7 @@ namespace QuickTest
 
 			var expr = Expression.Parse (AssertString);
 
-			var env = new EvalEnv (obj, objType);
+			var env = new ObjectEvalEnv (obj, objType);
 
 			var val = expr.Eval (env);
 
@@ -504,7 +504,7 @@ namespace QuickTest
 
 		object[] EvalArguments (object obj, Type objType)
 		{
-			var env = new EvalEnv (obj, objType);
+			var env = new ObjectEvalEnv (obj, objType);
 			var vals = new object[Arguments.Count];
 			for (var i = 0; i < vals.Length; i++) {
 				var a = Arguments[i];
@@ -601,44 +601,79 @@ namespace QuickTest
 		Unknown = 2,
 	}
 
-	class EvalEnv
+	abstract class EvalEnv
+	{
+		EvalEnv _parent;
+		public EvalEnv (EvalEnv parent = null)
+		{
+			_parent = parent;
+		}
+		public object Lookup (string name)
+		{
+			object value = null;
+			if (TryGetValue (name, out value)) {
+				return value;
+			}
+			else if (_parent != null) {
+				return _parent.Lookup (name);
+			}
+			else {
+				throw new Exception ("'" + name + "' not found");
+			}
+		}
+		protected abstract bool TryGetValue (string name, out object value);
+	}
+
+	class ObjectEvalEnv : EvalEnv
 	{
 		object _obj;
 		Type _objType;
 
-		public EvalEnv ()
+		public ObjectEvalEnv (EvalEnv parent = null)
+			: base (parent)
 		{
 			_obj = null;
 			_objType = typeof (object);
 		}
 
-		public EvalEnv (object obj, Type objType)
+		public ObjectEvalEnv (object obj, Type objType, EvalEnv parent = null)
+			: base (parent)
 		{
 			_obj = obj;
 			_objType = objType;
 		}
 
-		public object Lookup (string name)
+		protected override bool TryGetValue (string name, out object value)
 		{
-			var members = _objType.GetMember (name);
-
-			if (members == null || members.Length == 0) {
-				throw new Exception ("'" + name + "' not found in '" + _objType.FullName + "'");
-			}
-
-			var member = members[0];
-
-			var prop = member as PropertyInfo;
-			if (prop != null) {
-				return prop.GetValue (_obj, null);
+			if (name == "this") {
+				value = _obj;
+				return true;
 			}
 			else {
-				var field = member as FieldInfo;
-				if (field != null) {
-					return field.GetValue (_obj);
+				var members = _objType.GetMember (name);
+
+				if (members == null || members.Length == 0) {
+					value = null;
+					return false;
+				}
+
+				var member = members[0];
+
+				var prop = member as PropertyInfo;
+				if (prop != null) {
+					value = prop.GetValue (_obj, null);
+					return true;
 				}
 				else {
-					throw new NotImplementedException (member.MemberType.ToString ());
+					var field = member as FieldInfo;
+					if (field != null) {
+						value = field.GetValue (_obj);
+						return true;
+					}
+					else {
+						value = null;
+						return false;
+					}
 				}
 			}
 		}
@@ -946,9 +981,39 @@ namespace QuickTest
 				return Multiply (left, Right.Eval (env));
 			case TokenType.Divide:
 				return Divide (left, Right.Eval (env));
+			case TokenType.GreaterThan:
+				return GreaterThan (left, Right.Eval (env));
+			case TokenType.LessThan:
+				return LessThan (left, Right.Eval (env));
 			default:
 				throw new NotImplementedException (Operator.ToString ());
 			}
+		}
+
+		static object GreaterThan (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (a is double) return (double)pa > (double)pb;
+			else if (a is float) return (float)pa > (float)pb;
+			else if (a is decimal) return (decimal)pa > (decimal)pb;
+			else if (a is ulong) return (ulong)pa > (ulong)pb;
+			else if (a is long) return (long)pa > (long)pb;
+			else if (a is uint) return (uint)pa > (uint)pb;
+			else return (int)pa > (int)pb;
+		}
+
+		static object LessThan (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (a is double) return (double)pa < (double)pb;
+			else if (a is float) return (float)pa < (float)pb;
+			else if (a is decimal) return (decimal)pa < (decimal)pb;
+			else if (a is ulong) return (ulong)pa < (ulong)pb;
+			else if (a is long) return (long)pa < (long)pb;
+			else if (a is uint) return (uint)pa < (uint)pb;
+			else return (int)pa < (int)pb;
 		}
 
 		static object Add (object a, object b)
@@ -1289,7 +1354,7 @@ namespace QuickTest
 				else if (char.IsDigit (ch)) {
 					yield return TokenizeNumber (src, ref p);
 				}
-				else if (ch == '_' || char.IsLetter (ch)) {
+				else if (ch == '_' || ch == '$' || char.IsLetter (ch)) {
 					yield return TokenizeIdentifier (src, ref p);
 				}
 				else {
@@ -1423,7 +1488,7 @@ namespace QuickTest
 
 			while (p < end) {
 				var ch = src[p];
-				if (char.IsLetterOrDigit (ch) || ch == '_') {
+				if (char.IsLetterOrDigit (ch) || ch == '_' || ch == '$') {
 					p++;
 				}
 				else {
