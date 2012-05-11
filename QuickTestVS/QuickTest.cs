@@ -999,12 +999,12 @@ namespace QuickTest
 		{
 			object pa, pb;
 			Promote (a, b, out pa, out pb);
-			if (a is double) return (double)pa > (double)pb;
-			else if (a is float) return (float)pa > (float)pb;
-			else if (a is decimal) return (decimal)pa > (decimal)pb;
-			else if (a is ulong) return (ulong)pa > (ulong)pb;
-			else if (a is long) return (long)pa > (long)pb;
-			else if (a is uint) return (uint)pa > (uint)pb;
+			if (pa is double) return (double)pa > (double)pb;
+			else if (pa is float) return (float)pa > (float)pb;
+			else if (pa is decimal) return (decimal)pa > (decimal)pb;
+			else if (pa is ulong) return (ulong)pa > (ulong)pb;
+			else if (pa is long) return (long)pa > (long)pb;
+			else if (pa is uint) return (uint)pa > (uint)pb;
 			else return (int)pa > (int)pb;
 		}
 
@@ -1012,12 +1012,12 @@ namespace QuickTest
 		{
 			object pa, pb;
 			Promote (a, b, out pa, out pb);
-			if (a is double) return (double)pa < (double)pb;
-			else if (a is float) return (float)pa < (float)pb;
-			else if (a is decimal) return (decimal)pa < (decimal)pb;
-			else if (a is ulong) return (ulong)pa < (ulong)pb;
-			else if (a is long) return (long)pa < (long)pb;
-			else if (a is uint) return (uint)pa < (uint)pb;
+			if (pa is double) return (double)pa < (double)pb;
+			else if (pa is float) return (float)pa < (float)pb;
+			else if (pa is decimal) return (decimal)pa < (decimal)pb;
+			else if (pa is ulong) return (ulong)pa < (ulong)pb;
+			else if (pa is long) return (long)pa < (long)pb;
+			else if (pa is uint) return (uint)pa < (uint)pb;
 			else return (int)pa < (int)pb;
 		}
 
@@ -1028,12 +1028,12 @@ namespace QuickTest
 			}
 			object pa, pb;
 			Promote (a, b, out pa, out pb);
-			if (a is double) return (double)pa + (double)pb;
-			else if (a is float) return (float)pa + (float)pb;
-			else if (a is decimal) return (decimal)pa + (decimal)pb;
-			else if (a is ulong) return (ulong)pa + (ulong)pb;
-			else if (a is long) return (long)pa + (long)pb;
-			else if (a is uint) return (uint)pa + (uint)pb;
+			if (pa is double) return (double)pa + (double)pb;
+			else if (pa is float) return (float)pa + (float)pb;
+			else if (pa is decimal) return (decimal)pa + (decimal)pb;
+			else if (pa is ulong) return (ulong)pa + (ulong)pb;
+			else if (pa is long) return (long)pa + (long)pb;
+			else if (pa is uint) return (uint)pa + (uint)pb;
 			else return (int)pa + (int)pb;
 		}
 
@@ -1041,12 +1041,12 @@ namespace QuickTest
 		{
 			object pa, pb;
 			Promote (a, b, out pa, out pb);
-			if (a is double) return (double)pa - (double)pb;
-			else if (a is float) return (float)pa - (float)pb;
-			else if (a is decimal) return (decimal)pa - (decimal)pb;
-			else if (a is ulong) return (ulong)pa - (ulong)pb;
-			else if (a is long) return (long)pa - (long)pb;
-			else if (a is uint) return (uint)pa - (uint)pb;
+			if (pa is double) return (double)pa - (double)pb;
+			else if (pa is float) return (float)pa - (float)pb;
+			else if (pa is decimal) return (decimal)pa - (decimal)pb;
+			else if (pa is ulong) return (ulong)pa - (ulong)pb;
+			else if (pa is long) return (long)pa - (long)pb;
+			else if (pa is uint) return (uint)pa - (uint)pb;
 			else return (int)pa - (int)pb;
 		}
 
@@ -1054,12 +1054,12 @@ namespace QuickTest
 		{
 			object pa, pb;
 			Promote (a, b, out pa, out pb);
-			if (a is double) return (double)pa * (double)pb;
-			else if (a is float) return (float)pa * (float)pb;
-			else if (a is decimal) return (decimal)pa * (decimal)pb;
-			else if (a is ulong) return (ulong)pa * (ulong)pb;
-			else if (a is long) return (long)pa * (long)pb;
-			else if (a is uint) return (uint)pa * (uint)pb;
+			if (pa is double) return (double)pa * (double)pb;
+			else if (pa is float) return (float)pa * (float)pb;
+			else if (pa is decimal) return (decimal)pa * (decimal)pb;
+			else if (pa is ulong) return (ulong)pa * (ulong)pb;
+			else if (pa is long) return (long)pa * (long)pb;
+			else if (pa is uint) return (uint)pa * (uint)pb;
 			else return (int)pa * (int)pb;
 		}
 
@@ -1067,12 +1067,12 @@ namespace QuickTest
 		{
 			object pa, pb;
 			Promote (a, b, out pa, out pb);
-			if (a is double) return (double)pa / (double)pb;
-			else if (a is float) return (float)pa / (float)pb;
-			else if (a is decimal) return (decimal)pa / (decimal)pb;
-			else if (a is ulong) return (ulong)pa / (ulong)pb;
-			else if (a is long) return (long)pa / (long)pb;
-			else if (a is uint) return (uint)pa / (uint)pb;
+			if (pa is double) return (double)pa / (double)pb;
+			else if (pa is float) return (float)pa / (float)pb;
+			else if (pa is decimal) return (decimal)pa / (decimal)pb;
+			else if (pa is ulong) return (ulong)pa / (ulong)pb;
+			else if (pa is long) return (long)pa / (long)pb;
+			else if (pa is uint) return (uint)pa / (uint)pb;
 			else return (int)pa / (int)pb;
 		}
 
