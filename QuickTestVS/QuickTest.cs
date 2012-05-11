@@ -978,6 +978,8 @@ namespace QuickTest
 				return (bool)left || (bool)Right.Eval (env);
 			case TokenType.Equal:
 				return left.Equals (Right.Eval (env));
+			case TokenType.NotEqual:
+				return !left.Equals (Right.Eval (env));
 			case TokenType.Add:
 				return Add (left, Right.Eval (env));
 			case TokenType.Subtract:

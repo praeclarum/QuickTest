@@ -10,6 +10,15 @@ namespace QuickTest.Tests
 	public class ExpressionEvalTests
 	{
 		[TestMethod]
+		public void NotEqual ()
+		{
+			var e = Expression.Parse ("3 != 2");
+			var env = new ObjectEvalEnv ();
+			var v = e.Eval (env);
+			Assert.IsTrue ((bool)v);
+		}
+
+		[TestMethod]
 		public void Add ()
 		{
 			var e = Expression.Parse ("3 + 2");
