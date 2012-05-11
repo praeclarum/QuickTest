@@ -468,7 +468,9 @@ namespace QuickTest
 
 			var expr = Expression.Parse (AssertString);
 
-			var env = new ObjectEvalEnv (obj, objType);
+			var oenv = new ObjectEvalEnv (obj, objType);
+			var env = new LocalsEvalEnv (oenv);
+			env["$"] = Value;
 
 			var val = expr.Eval (env);
 
@@ -622,6 +624,24 @@ namespace QuickTest
 			}
 		}
 		protected abstract bool TryGetValue (string name, out object value);
+	}
+
+	class LocalsEvalEnv : EvalEnv
+	{
+		public LocalsEvalEnv (EvalEnv parent)
+			: base (parent)
+		{
+		}
+		readonly Dictionary<string, object> _values = new Dictionary<string, object> ();
+		public object this[string key]
+		{
+			get { return _values[key]; }
+			set { _values[key] = value; }
+		}
+		protected override bool TryGetValue (string name, out object value)
+		{
+			return _values.TryGetValue (name, out value);
+		}
 	}
 
 	class ObjectEvalEnv : EvalEnv
