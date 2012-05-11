@@ -165,25 +165,13 @@ namespace QuickTest
 	public class TestArgument
 	{
 		public string Name { get; set; }
+
 		public string ValueString { get; set; }
-		public string ValueType { get; set; }		
+		public string ValueType { get; set; }
 
 		public TestArgument ()
 		{
 			Name = "";
-		}
-
-		[XmlIgnore]
-		public object Value
-		{
-			get
-			{
-				return Test.ReadValue (ValueString, ValueType);
-			}
-			set
-			{
-				Test.WriteValue (value, s => { ValueString = s; }, t => { ValueType = t; });
-			}
 		}
 
 		public override string ToString ()
@@ -220,6 +208,27 @@ namespace QuickTest
 		public string ValueType { get; set; }
 		public string FailInfo { get; set; }
 
+		object _value;
+		[XmlIgnore]
+		public object Value
+		{
+			get
+			{
+				return _value;
+			}
+			set
+			{
+				_value = value;
+				ValueString = GetValueString (_value);
+				ValueType = GetTypeString (_value);
+			}
+		}
+
+		public Test ()
+		{
+			Member = "";
+			Arguments = new List<TestArgument> ();
+		}
 
 		public TestArgument GetArgument (string name)
 		{
@@ -233,48 +242,24 @@ namespace QuickTest
 			return a;
 		}
 		
-
-		public static object ReadValue (string valueString, string type)
-		{
-			if (string.IsNullOrEmpty (type) || string.IsNullOrEmpty (type)) return null;
-				foreach (var asm in AppDomain.CurrentDomain.GetAssemblies ()) {
-					var t = asm.GetType (type);
-					if (t != null) {
-						return Convert.ChangeType (valueString, t, CultureInfo.InvariantCulture);
-					}
-				}
-				return null;
-		}
-
-		public static void WriteValue (object value, Action<string> writeValueString, Action<string> writeValueType)
+		public static string GetValueString (object value)
 		{
 			if (value != null) {
-				writeValueType (value.GetType ().FullName);
-				writeValueString (Convert.ToString (value, CultureInfo.InvariantCulture));
+				return Convert.ToString (value, CultureInfo.InvariantCulture);
 			}
 			else {
-				writeValueType ("");
-				writeValueString ("");
+				return "null";
 			}
 		}
 
-		[XmlIgnore]
-		public object Value
+		public static string GetTypeString (object value)
 		{
-			get
-			{
-				return ReadValue (ValueString, ValueType);
+			if (value != null) {
+				return value.GetType ().FullName;
 			}
-			set
-			{
-				WriteValue (value, s => { ValueString = s; }, t => { ValueType = t; });				
+			else {
+				return typeof(object).FullName;
 			}
-		}
-
-		public Test()
-		{
-			Member = "";
-			Arguments = new List<TestArgument> ();
 		}
 
 		public void Run ()
@@ -339,7 +324,7 @@ namespace QuickTest
 			}
 			catch (Exception ex) {
 				Result = TestResult.Fail;
-				FailInfo = ex.GetType () + ": " + ex.Message;
+				FailInfo = ex.ToString ();// ex.GetType () + ": " + ex.Message;
 			}
 
 			ResultTimeUtc = DateTime.UtcNow;
