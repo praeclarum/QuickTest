@@ -33,10 +33,10 @@ namespace QuickTest
 
 		private void button1_Click (object sender, EventArgs e)
 		{
-			SyncWithCode ();
+			SyncWithCode (forceRun: true);
 		}
 
-		public void SyncWithCode ()
+		public void SyncWithCode (bool forceRun = false)
 		{
 			var doc = ApplicationObject.ActiveDocument;
 			if (doc == null) return;
@@ -47,21 +47,25 @@ namespace QuickTest
 
 			if (funcElm == null) {
 				var propElm = (CodeProperty2)p.CodeElement[vsCMElement.vsCMElementProperty];
-				var getter = propElm.Getter;
-				var setter = propElm.Setter;
-				if (getter != null &&
-					p.GreaterThan (getter.StartPoint) &&
-					p.LessThan (getter.EndPoint)) {
+				if (propElm != null) {
+					var getter = propElm.Getter;
+					var setter = propElm.Setter;
+					if (getter != null &&
+						p.GreaterThan (getter.StartPoint) &&
+						p.LessThan (getter.EndPoint)) {
 						funcElm = (CodeFunction2)getter;
-				}
-				else if (setter != null &&
-					p.GreaterThan (setter.StartPoint) &&
-					p.LessThan (setter.EndPoint)) {
-					funcElm = (CodeFunction2)setter;
+					}
+					else if (setter != null &&
+						p.GreaterThan (setter.StartPoint) &&
+						p.LessThan (setter.EndPoint)) {
+						funcElm = (CodeFunction2)setter;
+					}
 				}
 			}
 
 			if (funcElm == null) return;
+
+			var newFunc = false;
 
 			if (_funcElm == null || GetMemberName (funcElm) != _tests.Member) {
 				_funcElm = funcElm;
@@ -69,9 +73,13 @@ namespace QuickTest
 				SetMember ();
 
 				DisplayFunction ();
+
+				newFunc = true;
 			}
 
-			RunAllRows ();
+			if (forceRun || newFunc) {
+				RunAllRows ();
+			}
 		}
 
 		string _projectPath;
@@ -241,15 +249,23 @@ namespace QuickTest
 
 		static string GetTypeName (CodeTypeRef type)
 		{
-			var elm = type.CodeType;
-			if (elm != null) {
-				var chain = GetChain (elm);
-				var name = GetChainName (chain.TakeWhile (x => x.Kind == vsCMElement.vsCMElementNamespace || x.IsType));
-				return name;
+			var name = "";
+			try {
+				var elm = type.CodeType;
+				if (elm != null) {
+					var chain = GetChain (elm);
+					name = GetChainName (chain.TakeWhile (x => x.Kind == vsCMElement.vsCMElementNamespace || x.IsType));
+				}
+				else {
+					name = type.AsFullName;
+				}
 			}
-			else {
-				return type.AsFullName;
+			catch (Exception) {
 			}
+			if (string.IsNullOrEmpty (name)) {
+				name = type.AsString;
+			}
+			return name;
 		}
 
 		void RunTests (TestPlan inTests)
@@ -779,6 +795,13 @@ namespace QuickTest
 				}
 			}
 			catch (Exception) {
+			}
+		}
+
+		private void UpdateTimer_Tick (object sender, EventArgs e)
+		{
+			if (this.Visible) {
+				SyncWithCode (forceRun: false);
 			}
 		}
 	}

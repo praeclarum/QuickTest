@@ -670,7 +670,7 @@ namespace QuickTest
 				return true;
 			}
 			else {
-				var members = _objType.GetMember (name);
+				var members = _objType.GetMember (name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
 				if (members == null || members.Length == 0) {
 					value = null;

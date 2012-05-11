@@ -40,6 +40,7 @@
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.button1 = new System.Windows.Forms.Button();
 			this.MemberBox = new System.Windows.Forms.ComboBox();
+			this.UpdateTimer = new System.Windows.Forms.Timer(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.Grid)).BeginInit();
 			this.GridMenu.SuspendLayout();
 			this.panel1.SuspendLayout();
@@ -173,6 +174,12 @@
 			this.MemberBox.Size = new System.Drawing.Size(281, 23);
 			this.MemberBox.TabIndex = 1;
 			// 
+			// UpdateTimer
+			// 
+			this.UpdateTimer.Enabled = true;
+			this.UpdateTimer.Interval = 1000;
+			this.UpdateTimer.Tick += new System.EventHandler(this.UpdateTimer_Tick);
+			// 
 			// TestWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -205,5 +212,6 @@
 		private System.Windows.Forms.Button StatusButton;
 		private System.Windows.Forms.ContextMenuStrip GridMenu;
 		private System.Windows.Forms.ToolStripMenuItem deleteTestToolStripMenuItem;
+		private System.Windows.Forms.Timer UpdateTimer;
 	}
 }
