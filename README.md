@@ -36,8 +36,8 @@ added to your "Tools" menu. Sorry for the hassle, but this is my first time writ
 
 ### Manual
 
-1. Load QuickTest.sln in Visual Studio
-2. Build.
+1. Load QuickTest.sln
+2. Build
 3. Copy `QuickTestVS\bin\Debug\QuickTestVS.dll`, 
   `QuickTestVS\QuickTestVS.AddIn`, and
   `QuickTestRunner\bin\Debug\QuickTestRunner.exe` to
