@@ -16,6 +16,8 @@ namespace QuickTest.Tests
 
 			public TestObject (string name, int age)
 			{
+				Name = name;
+				Age = age;
 			}
 
 			public TestObject (string name)
@@ -141,18 +143,35 @@ namespace QuickTest.Tests
 		}
 
 		[TestMethod]
-		public void ConstructTypeNoName ()
+		public void ObjectLiteralWithNew ()
 		{
-			var e = Expression.Parse ("new (2001, 9, 11)");
-			var env = new ObjectEvalEnv (null, typeof (DateTime));
+			var e = Expression.Parse ("new () { Name = \"Frank\", Age = 42 }");
+			Assert.IsInstanceOfType (e, typeof (ObjectLiteralExpression));
+
+			var env = new ObjectEvalEnv (null, typeof (TestObject));
 			var v = e.Eval (env);
 
-			Assert.IsInstanceOfType (v, typeof (DateTime));
-			var o = (DateTime)v;
+			Assert.IsInstanceOfType (v, typeof (TestObject));
+			var o = (TestObject)v;
 
-			Assert.AreEqual (9, o.Month);
-			Assert.AreEqual (11, o.Day);
-			Assert.AreEqual (2001, o.Year);
+			Assert.AreEqual ("Frank", o.Name);
+			Assert.AreEqual (42, o.Age);
+		}
+
+		[TestMethod]
+		public void ObjectLiteralWithNewArg ()
+		{
+			var e = Expression.Parse ("new (\"Frank\") { Age = 42 }");
+			Assert.IsInstanceOfType (e, typeof (ObjectLiteralExpression));
+
+			var env = new ObjectEvalEnv (null, typeof (TestObject));
+			var v = e.Eval (env);
+
+			Assert.IsInstanceOfType (v, typeof (TestObject));
+			var o = (TestObject)v;
+
+			Assert.AreEqual ("Frank", o.Name);
+			Assert.AreEqual (42, o.Age);
 		}
 	}
 }

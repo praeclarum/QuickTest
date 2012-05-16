@@ -346,42 +346,9 @@ namespace QuickTest
 			}
 		}
 
-		static void SetValue (object obj, MemberInfo member, object value)
-		{
-			if (member is PropertyInfo) {
-				var propInfo = (PropertyInfo)member;
-				propInfo.SetValue (obj, value, null);
-			}
-			else if (member is FieldInfo) {
-				var fieldInfo = (FieldInfo)member;
-				fieldInfo.SetValue (obj, value);
-			}
-			else {
-				throw new Exception ("Cannot assign values to '" + member.Name + "'");
-			}
-		}
-
-		/*object Eval (object obj, Type objType, Expression expr)
-		{
-			var env = new EvalEnv (obj, objType);
-			return expr.Eval (env);
-		}*/
-
 		object AssignObject (object obj, Type objType, ObjectLiteralExpression literal, EvalEnv env)
 		{
-			if (env == null) {
-				env = new ObjectEvalEnv (obj, objType);
-			}
-
-			foreach (var a in literal.Assignments) {
-				var members = objType.GetMember (a.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-				if (members == null || members.Length == 0) {
-					throw new Exception ("'" + a.Name + "' not found in '" + objType.FullName + "'");
-				}
-				var value = a.Value.Eval (env);
-				SetValue (obj, members[0], value);
-			}
-			return obj;
+			throw new NotImplementedException ();
 		}
 
 		internal static Type FindType (string typeName)
@@ -412,14 +379,6 @@ namespace QuickTest
 			throw new Exception ("Type '" + typeName + "' not found");
 		}
 
-		object CreateObject (string objTypeName, ObjectLiteralExpression literal, EvalEnv env)
-		{
-			var type = FindType (objTypeName);
-			var obj = Activator.CreateInstance (type);
-			AssignObject (obj, type, literal, env);
-			return obj;
-		}
-
 		object CreateObject (string objTypeName, string expressionText, EvalEnv env)
 		{
 			var objType = FindType (objTypeName);
@@ -433,16 +392,7 @@ namespace QuickTest
 			}
 			else {
 				var expr = Expression.Parse (expressionText);
-
-				var literal = expr as ObjectLiteralExpression;
-				if (literal != null) {
-					var obj = Activator.CreateInstance (objType);
-					AssignObject (obj, objType, literal, env);
-					return obj;
-				}
-				else {
-					return expr.Eval (new ObjectEvalEnv ());
-				}
+				return expr.Eval (new ObjectEvalEnv (null, objType, env));
 			}
 		}
 
@@ -510,18 +460,7 @@ namespace QuickTest
 			var vals = new object[Arguments.Count];
 			for (var i = 0; i < vals.Length; i++) {
 				var a = Arguments[i];
-				if (string.IsNullOrWhiteSpace (a.ValueString)) {
-					vals[i] = CreateObject (a.ValueType, a.ValueString, env);
-				}
-				else {
-					var e = Expression.Parse (a.ValueString);
-					if (e is ObjectLiteralExpression) {
-						vals[i] = CreateObject (a.ValueType, (ObjectLiteralExpression)e, env);
-					}
-					else {
-						vals[i] = e.Eval (env);
-					}
-				}
+				vals[i] = CreateObject (a.ValueType, a.ValueString, env);
 			}
 			return vals;
 		}
@@ -869,12 +808,15 @@ namespace QuickTest
 					}
 				}
 				else if (t.Type == TokenType.LeftCurly) {
-					e = ParseObjectLiteral (toks, ref p);
+					var l = ParseObjectLiteral (toks, ref p);
+					l.Constructor = new NewExpression ();
+					e = l;
 				}
 				else if (t.Type == TokenType.New) {
 
 					p++;
 					var ne = new NewExpression ();
+					e = ne;
 
 					if (p < end && toks[p].Type == TokenType.Identifier) {
 						ne.TypeName = ParseTypeName (toks, ref p);
@@ -882,15 +824,23 @@ namespace QuickTest
 
 					if (p < end && toks[p].Type == TokenType.LeftParen) {
 						var nt = TokenType.LeftParen;
-						while (p < end && toks[p].Type == nt) {
+						while (p < end && toks[p].Type == nt && toks[p].Type != TokenType.RightParen) {
 							p++;
 							var a = Parse (toks, ref p);
-							ne.Arguments.Add (a);
+							if (a != null) {
+								ne.Arguments.Add (a);
+							}
 							nt = TokenType.Comma;
 						}
 						if (p < end && toks[p].Type == TokenType.RightParen) {
 							// Good
 							p++;
+
+							if (p < end && toks[p].Type == TokenType.LeftCurly) {
+								var l = ParseObjectLiteral (toks, ref p);
+								l.Constructor = ne;
+								e = l;
+							}
 						}
 						else {
 							throw new ParseException ("Expected ')'");
@@ -899,8 +849,6 @@ namespace QuickTest
 					else {
 						throw new ParseException ("Expected '('");
 					}
-
-					e = ne;
 				}
 
 				if (p < end && toks[p].Type == TokenType.Dot) {
@@ -999,8 +947,9 @@ namespace QuickTest
 				while (p != null) {
 					if (p is ObjectEvalEnv) {
 						ty = ((ObjectEvalEnv)p).ObjectType;
+						break;
 					}
-					p = env.Parent;
+					p = p.Parent;
 				}
 				if (ty == null) {
 					throw new Exception ("No context to create anonymous type");
@@ -1231,19 +1180,49 @@ namespace QuickTest
 
 	class ObjectLiteralExpression : Expression
 	{
+		public NewExpression Constructor { get; set; }
+
 		public readonly List<Assignment> Assignments = new List<Assignment> ();
 		public class Assignment
 		{
 			public string Name;
 			public Expression Value;
 		}
-		public override object Eval (EvalEnv env)
-		{
-			throw new NotImplementedException ();
-		}
+		
 		public void Add (string ident, Expression val)
 		{
 			Assignments.Add (new Assignment { Name = ident, Value = val });
+		}
+
+		public override object Eval (EvalEnv env)
+		{
+			if (Constructor == null) throw new InvalidOperationException ("Cannot eval object literal without Constructor");
+			var obj = Constructor.Eval (env);
+			var objType = obj.GetType ();
+			foreach (var a in Assignments) {
+				var members = objType.GetMember (a.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+				if (members == null || members.Length == 0) {
+					throw new Exception ("'" + a.Name + "' not found in '" + objType.FullName + "'");
+				}
+				var value = a.Value.Eval (env);
+				SetValue (obj, members[0], value);
+			}
+			return obj;
+		}
+
+		static void SetValue (object obj, MemberInfo member, object value)
+		{
+			if (member is PropertyInfo) {
+				var propInfo = (PropertyInfo)member;
+				propInfo.SetValue (obj, value, null);
+			}
+			else if (member is FieldInfo) {
+				var fieldInfo = (FieldInfo)member;
+				fieldInfo.SetValue (obj, value);
+			}
+			else {
+				throw new Exception ("Cannot assign values to '" + member.Name + "'");
+			}
 		}
 	}
 

@@ -126,7 +126,7 @@ namespace QuickTest.Tests
 				AssertString = "FullName == \"Alva Krueger\"",
 				TestType = TestType.PropertySetter,
 			};
-			t.Arguments.Add (new TestArgument { Name = "value", ValueString = "\"Alva\"" });
+			t.Arguments.Add (new TestArgument { Name = "value", ValueString = "\"Alva\"", ValueType = "System.String" });
 			t.Run ();
 			Assert.AreEqual (TestResult.Pass, t.Result, t.FailInfo);
 		}
