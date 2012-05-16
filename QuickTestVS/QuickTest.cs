@@ -1042,6 +1042,10 @@ namespace QuickTest
 				return GreaterThan (left, Right.Eval (env));
 			case TokenType.LessThan:
 				return LessThan (left, Right.Eval (env));
+			case TokenType.GreaterThanOrEqual:
+				return GreaterThanOrEqual (left, Right.Eval (env));
+			case TokenType.LessThanOrEqual:
+				return LessThanOrEqual (left, Right.Eval (env));
 			default:
 				throw new NotImplementedException (Operator.ToString ());
 			}
@@ -1071,6 +1075,32 @@ namespace QuickTest
 			else if (pa is long) return (long)pa < (long)pb;
 			else if (pa is uint) return (uint)pa < (uint)pb;
 			else return (int)pa < (int)pb;
+		}
+
+		static object GreaterThanOrEqual (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (pa is double) return (double)pa >= (double)pb;
+			else if (pa is float) return (float)pa >= (float)pb;
+			else if (pa is decimal) return (decimal)pa >= (decimal)pb;
+			else if (pa is ulong) return (ulong)pa >= (ulong)pb;
+			else if (pa is long) return (long)pa >= (long)pb;
+			else if (pa is uint) return (uint)pa >= (uint)pb;
+			else return (int)pa >= (int)pb;
+		}
+
+		static object LessThanOrEqual (object a, object b)
+		{
+			object pa, pb;
+			Promote (a, b, out pa, out pb);
+			if (pa is double) return (double)pa <= (double)pb;
+			else if (pa is float) return (float)pa <= (float)pb;
+			else if (pa is decimal) return (decimal)pa <= (decimal)pb;
+			else if (pa is ulong) return (ulong)pa <= (ulong)pb;
+			else if (pa is long) return (long)pa <= (long)pb;
+			else if (pa is uint) return (uint)pa <= (uint)pb;
+			else return (int)pa <= (int)pb;
 		}
 
 		static object Add (object a, object b)
