@@ -791,6 +791,7 @@ namespace QuickTest
 
 				var c = Grid.SelectedCells.Cast<DataGridViewCell> ().FirstOrDefault ();
 				if (c == null) return;
+				if (c.ColumnIndex != _failColIndex) return;
 				var row = Grid.Rows[c.RowIndex];
 				var t = row.Tag as Test;
 				if (t == null) return;
