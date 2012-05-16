@@ -9,6 +9,26 @@ namespace QuickTest.Tests
 	[TestClass]
 	public class ExpressionEvalTests
 	{
+		class TestObject
+		{
+			public string Name { get; set; }
+			public int Age { get; set; }
+
+			public TestObject (string name, int age)
+			{
+			}
+
+			public TestObject (string name)
+				: this (name, 0)
+			{
+			}
+
+			public TestObject ()
+				: this ("", 0)
+			{
+			}
+		}
+
 		[TestMethod]
 		public void NotEqual ()
 		{
@@ -98,6 +118,36 @@ namespace QuickTest.Tests
 			var v = e.Eval (env);
 
 			Assert.IsInstanceOfType (v, typeof(DateTime));
+			var o = (DateTime)v;
+
+			Assert.AreEqual (9, o.Month);
+			Assert.AreEqual (11, o.Day);
+			Assert.AreEqual (2001, o.Year);
+		}
+
+		[TestMethod]
+		public void ConstructTypeName ()
+		{
+			var e = Expression.Parse ("new DateTime (2001, 9, 11)");
+			var env = new LocalsEvalEnv ();
+			var v = e.Eval (env);
+
+			Assert.IsInstanceOfType (v, typeof (DateTime));
+			var o = (DateTime)v;
+
+			Assert.AreEqual (9, o.Month);
+			Assert.AreEqual (11, o.Day);
+			Assert.AreEqual (2001, o.Year);
+		}
+
+		[TestMethod]
+		public void ConstructTypeNoName ()
+		{
+			var e = Expression.Parse ("new (2001, 9, 11)");
+			var env = new ObjectEvalEnv (null, typeof (DateTime));
+			var v = e.Eval (env);
+
+			Assert.IsInstanceOfType (v, typeof (DateTime));
 			var o = (DateTime)v;
 
 			Assert.AreEqual (9, o.Month);

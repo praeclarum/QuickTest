@@ -384,17 +384,32 @@ namespace QuickTest
 			return obj;
 		}
 
-		internal static Type FindType (string typeFullName)
+		internal static Type FindType (string typeName)
 		{
-			if (string.IsNullOrEmpty (typeFullName)) throw new ArgumentNullException ("typeFullName");
+			if (string.IsNullOrEmpty (typeName)) throw new ArgumentNullException ("typeFullName");
 
 			var asms = AppDomain.CurrentDomain.GetAssemblies ();
 
+			//
+			// Try for the exact name
+			//
 			foreach (var a in asms) {
-				var type = a.GetType (typeFullName);
+				var type = a.GetType (typeName);
 				if (type != null) return type;
 			}
-			throw new Exception ("Type '" + typeFullName + "' not found");
+
+			//
+			// Try for a relative name
+			//
+			foreach (var a in asms) {
+				foreach (var t in a.GetTypes ()) {
+					if (t.FullName.EndsWith (typeName)) {
+						return t;
+					}
+				}
+			}
+
+			throw new Exception ("Type '" + typeName + "' not found");
 		}
 
 		object CreateObject (string objTypeName, ObjectLiteralExpression literal, EvalEnv env)
@@ -591,6 +606,8 @@ namespace QuickTest
 	abstract class EvalEnv
 	{
 		EvalEnv _parent;
+		public EvalEnv Parent { get { return _parent; } }
+
 		public EvalEnv (EvalEnv parent = null)
 		{
 			_parent = parent;
@@ -633,6 +650,8 @@ namespace QuickTest
 	{
 		object _obj;
 		Type _objType;
+
+		public Type ObjectType { get { return _objType; } }
 
 		public ObjectEvalEnv (EvalEnv parent = null)
 			: base (parent)
@@ -973,7 +992,23 @@ namespace QuickTest
 		}
 		public override object Eval (EvalEnv env)
 		{
-			var ty = Test.FindType (TypeName);
+			Type ty = null;
+
+			if (string.IsNullOrEmpty (TypeName)) {
+				var p = env;
+				while (p != null) {
+					if (p is ObjectEvalEnv) {
+						ty = ((ObjectEvalEnv)p).ObjectType;
+					}
+					p = env.Parent;
+				}
+				if (ty == null) {
+					throw new Exception ("No context to create anonymous type");
+				}
+			}
+			else {
+				ty = Test.FindType (TypeName);
+			}
 			var args = Arguments.Select (a => a.Eval (env)).ToArray ();
 			return Activator.CreateInstance (ty, args);
 		}
