@@ -135,10 +135,10 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\Users\fak\Documents\Visual Studio 2010\Addins\QuickTestVS - For Testing.AddIn">
+    <None Include="..\..\..\Users\fak\Documents\Visual Studio 2010\Addins\QuickTestVS - For Testing.AddIn">
       <Link>QuickTestVS - For Testing.AddIn</Link>
       <SubType>Designer</SubType>
-    </Content>
+    </None>
     <Content Include="QuickTestVS.AddIn" />
   </ItemGroup>
   <ItemGroup>

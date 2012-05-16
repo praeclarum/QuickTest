@@ -268,13 +268,39 @@ namespace QuickTest
 			return name;
 		}
 
+		static string FindRunner ()
+		{
+			var asmLoc = typeof (TestWindow).Assembly.Location;
+			var dir = Path.GetDirectoryName (asmLoc);
+
+			var paths = new[] {
+				Path.Combine (dir, "QuickTestRunner.exe"),
+				Path.Combine (dir, "..\\..\\QuickTestRunner\\bin\\Debug\\QuickTestRunner.exe"),
+				Path.Combine (dir, "..\\..\\QuickTestRunner\\bin\\Release\\QuickTestRunner.exe"),
+			};
+
+			var infos =  from p in paths
+						 where File.Exists (p)
+						 let fi = new FileInfo (p)
+						 orderby fi.LastWriteTimeUtc descending
+						 select p;
+
+			return infos.FirstOrDefault ();
+		}
+
 		void RunTests (TestPlan inTests)
 		{
 			var testsPath = Path.GetTempFileName ();
 			inTests.Save (testsPath);
 
+			var runner = FindRunner ();
+			if (string.IsNullOrEmpty (runner)) {
+				MessageBox.Show ("Could not find QuickTestRunner.exe");
+				return;
+			}
+
 			var info = new System.Diagnostics.ProcessStartInfo {
-				FileName = @"C:\Projects\QuickTest\QuickTestRunner\bin\Debug\QuickTestRunner.exe",
+				FileName = runner,
 				Arguments = "\"" + testsPath + "\"",
 				RedirectStandardOutput = true,
 				StandardOutputEncoding = Encoding.UTF8,

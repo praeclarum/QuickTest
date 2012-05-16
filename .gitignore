@@ -6,5 +6,7 @@ QuickTestTest/bin/
 QuickTestTest/obj/
 QuickTestRunner/bin/
 QuickTestRunner/obj/
+QuickTestSetup/Debug/
+QuickTestSetup/Release/
 TestResults/
 
