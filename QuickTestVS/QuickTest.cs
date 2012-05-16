@@ -384,7 +384,7 @@ namespace QuickTest
 			return obj;
 		}
 
-		static Type FindType (string typeFullName)
+		internal static Type FindType (string typeFullName)
 		{
 			if (string.IsNullOrEmpty (typeFullName)) throw new ArgumentNullException ("typeFullName");
 
@@ -613,7 +613,7 @@ namespace QuickTest
 
 	class LocalsEvalEnv : EvalEnv
 	{
-		public LocalsEvalEnv (EvalEnv parent)
+		public LocalsEvalEnv (EvalEnv parent = null)
 			: base (parent)
 		{
 		}
@@ -852,6 +852,37 @@ namespace QuickTest
 				else if (t.Type == TokenType.LeftCurly) {
 					e = ParseObjectLiteral (toks, ref p);
 				}
+				else if (t.Type == TokenType.New) {
+
+					p++;
+					var ne = new NewExpression ();
+
+					if (p < end && toks[p].Type == TokenType.Identifier) {
+						ne.TypeName = ParseTypeName (toks, ref p);
+					}
+
+					if (p < end && toks[p].Type == TokenType.LeftParen) {
+						var nt = TokenType.LeftParen;
+						while (p < end && toks[p].Type == nt) {
+							p++;
+							var a = Parse (toks, ref p);
+							ne.Arguments.Add (a);
+							nt = TokenType.Comma;
+						}
+						if (p < end && toks[p].Type == TokenType.RightParen) {
+							// Good
+							p++;
+						}
+						else {
+							throw new ParseException ("Expected ')'");
+						}
+					}
+					else {
+						throw new ParseException ("Expected '('");
+					}
+
+					e = ne;
+				}
 
 				if (p < end && toks[p].Type == TokenType.Dot) {
 					if (p + 1 < end && toks[p + 1].Type == TokenType.Identifier) {
@@ -868,6 +899,25 @@ namespace QuickTest
 			}
 
 			return e;
+		}
+
+		static string ParseTypeName (Token[] toks, ref int p)
+		{
+			var sb = new StringBuilder ();
+			var end = toks.Length;
+			var nt = TokenType.Identifier;
+			while (p < end && toks[p].Type == nt) {
+				if (nt == TokenType.Identifier) {
+					sb.Append (toks[p].ToString ());
+					nt = TokenType.Dot;
+				}
+				else {
+					sb.Append ('.');
+					nt = TokenType.Identifier;
+				}
+				p++;
+			}
+			return sb.ToString ();
 		}
 
 		static ObjectLiteralExpression ParseObjectLiteral (Token[] toks, ref int p)
@@ -910,6 +960,22 @@ namespace QuickTest
 		public ParseException (string message)
 			: base (message)
 		{
+		}
+	}
+
+	class NewExpression : Expression
+	{
+		public string TypeName { get; set; }
+		public readonly List<Expression> Arguments = new List<Expression> ();
+		public NewExpression ()
+		{
+			TypeName = "";
+		}
+		public override object Eval (EvalEnv env)
+		{
+			var ty = Test.FindType (TypeName);
+			var args = Arguments.Select (a => a.Eval (env)).ToArray ();
+			return Activator.CreateInstance (ty, args);
 		}
 	}
 
@@ -1232,6 +1298,8 @@ namespace QuickTest
 		LogicalAnd = 3002,
 		BitwiseAnd = 3003,
 		LogicalNot = 3004,
+
+		New = 4000,
 	}
 
 	class Token
@@ -1504,7 +1572,14 @@ namespace QuickTest
 			}
 
 			var length = p - startIndex;
-			return new Token (TokenType.Identifier, src, startIndex, length);
+
+			var ty = TokenType.Identifier;
+
+			if (length == 3 && src[startIndex] == 'n' && src[startIndex+1] == 'e' && src[startIndex+2] == 'w') {
+				ty = TokenType.New;
+			}
+
+			return new Token (ty, src, startIndex, length);
 		}
 	}
 

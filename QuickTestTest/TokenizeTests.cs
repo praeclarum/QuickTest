@@ -60,5 +60,13 @@ namespace QuickTest.Tests
 			var toks = Token.Tokenize ("{foo:42,bar:23}").ToList ();
 			Assert.AreEqual (9, toks.Count);
 		}
+
+		[TestMethod]
+		public void New ()
+		{
+			var toks = Token.Tokenize ("new").ToList ();
+			Assert.AreEqual (1, toks.Count);
+			Assert.AreEqual (TokenType.New, toks[0].Type);
+		}
 	}
 }

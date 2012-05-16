@@ -89,5 +89,20 @@ namespace QuickTest.Tests
 			var v = e.Assignments[0].Value.Eval (env);
 			Assert.AreEqual (1, v);
 		}
+
+		[TestMethod]
+		public void ConstructTypeFullName ()
+		{
+			var e = Expression.Parse ("new System.DateTime (2001, 9, 11)");
+			var env = new LocalsEvalEnv ();
+			var v = e.Eval (env);
+
+			Assert.IsInstanceOfType (v, typeof(DateTime));
+			var o = (DateTime)v;
+
+			Assert.AreEqual (9, o.Month);
+			Assert.AreEqual (11, o.Day);
+			Assert.AreEqual (2001, o.Year);
+		}
 	}
 }
