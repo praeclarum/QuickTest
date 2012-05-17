@@ -441,6 +441,9 @@ namespace QuickTest
 
 			var plan = new TestPlan ();
 
+			//
+			// Find all the tests that need to run
+			//
 			var nargs = _paramInfos.Count;
 
 			foreach (var rowIndex in rowIndices) {
@@ -458,10 +461,33 @@ namespace QuickTest
 
 			if (plan.Tests.Count == 0) return;
 
-			plan.AssemblyPath = GetAssemblyPath (_funcElm.ProjectItem.ContainingProject);
+			//
+			// Get the extra info needed by the test plan
+			//
+			var project = _funcElm.ProjectItem.ContainingProject;
+			plan.AssemblyPath = GetAssemblyPath (project);
+			try {
+				var references = ((dynamic)project.Object).References;
+				
+				foreach (var item in references) {
+					plan.References.Add (new TestAssemblyReference {
+						Name = item.Name,
+						Version = item.Version,
+						Culture = item.Culture,
+						PublicKeyToken = item.PublicKeyToken.ToString ().ToLowerInvariant (),
+						Path = item.Path,
+						StrongName = item.StrongName,
+					});
+				}
+			}
+			catch (Exception) {
+			}
+
+			//
+			// Run it
+			//
 			Progress.Visible = true;
 			SetStatus (InfoStatusIcon, "Test run in progress");
-
 			ThreadPool.QueueUserWorkItem (delegate {
 				RunTests (plan);
 			});

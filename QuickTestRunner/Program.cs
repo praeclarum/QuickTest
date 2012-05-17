@@ -16,6 +16,7 @@ namespace QuickTest.Runner
 		public static void Main (string[] args)
 		{
 			TestPlan plan = TestPlan.Open (args[0]);
+
 			new Program {
 				_plan = plan,
 			}.Run ();

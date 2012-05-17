@@ -75,11 +75,13 @@ namespace QuickTest
 	public class TestPlan
 	{
 		public string AssemblyPath { get; set; }
+		public List<TestAssemblyReference> References { get; set; }
 		public List<Test> Tests { get; set; }
 
 		public TestPlan ()
 		{
 			AssemblyPath = "";
+			References = new List<TestAssemblyReference> ();
 			Tests = new List<Test> ();
 		}
 
@@ -129,27 +131,39 @@ namespace QuickTest
 			}
 		}
 
-		List<IGrouping<string, string>> _referenceAssemblies;
+		List<IGrouping<string, string>> _systemReferenceAssemblies;
 
 		/// <summary>
 		/// http://blogs.msdn.com/b/msbuild/archive/2007/04/12/new-reference-assemblies-location.aspx
 		/// </summary>
-		void AddReferenceAssemblies ()
+		void AddSystemReferenceAssemblies ()
 		{
 			var dir = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "Reference Assemblies");
 			var dlls = Directory.EnumerateFiles (dir, "*.dll", SearchOption.AllDirectories);
-			_referenceAssemblies = dlls.GroupBy (x => Path.GetFileNameWithoutExtension (x)).ToList ();
+			_systemReferenceAssemblies = dlls.GroupBy (x => Path.GetFileNameWithoutExtension (x)).ToList ();
 		}
 
 		System.Reflection.Assembly CurrentDomain_AssemblyResolve (object sender, ResolveEventArgs args)
 		{
-			if (_referenceAssemblies == null) {
-				AddReferenceAssemblies ();
-			}
-
 			var name = args.Name;
 
-			foreach (var ra in _referenceAssemblies) {
+			//
+			// Try to find it in our known references
+			//
+			foreach (var r in References) {
+				if (name.StartsWith (r.Name + ",")) {
+					return Assembly.LoadFrom (r.Path);
+				}
+			}
+
+			//
+			// Otherwise, scan the system
+			//
+			if (_systemReferenceAssemblies == null) {
+				AddSystemReferenceAssemblies ();
+			}
+
+			foreach (var ra in _systemReferenceAssemblies) {
 				if (args.Name.StartsWith (ra.Key)) {
 					foreach (var raa in ra) {
 						return Assembly.LoadFrom (raa);
@@ -158,6 +172,23 @@ namespace QuickTest
 			}
 
 			return null;
+		}
+	}
+
+	[Serializable]
+	public class TestAssemblyReference
+	{
+		public string Name { get; set; }
+		public string Version { get; set; }
+		public string Culture { get; set; }
+		public string PublicKeyToken { get; set; }
+		public string Path { get; set; }
+		public bool StrongName { get; set; }
+
+		public override string ToString ()
+		{
+			return string.Format ("{0}, Version={1}, Culture={2}, PublicKeyToken={3} @{4}", 
+				Name, Version, string.IsNullOrEmpty (Culture) ? "neutral" : Culture, PublicKeyToken, Path);
 		}
 	}
 
