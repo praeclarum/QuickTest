@@ -177,7 +177,7 @@
 			// UpdateTimer
 			// 
 			this.UpdateTimer.Enabled = true;
-			this.UpdateTimer.Interval = 1000;
+			this.UpdateTimer.Interval = 2000;
 			this.UpdateTimer.Tick += new System.EventHandler(this.UpdateTimer_Tick);
 			// 
 			// TestWindow

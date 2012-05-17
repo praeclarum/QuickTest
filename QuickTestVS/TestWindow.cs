@@ -33,7 +33,12 @@ namespace QuickTest
 
 		private void button1_Click (object sender, EventArgs e)
 		{
-			SyncWithCode (forceRun: true);
+			try {
+				SyncWithCode (forceRun: true);
+			}
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
+			}
 		}
 
 		public void SyncWithCode (bool forceRun = false)
@@ -41,6 +46,9 @@ namespace QuickTest
 			var doc = ApplicationObject.ActiveDocument;
 			if (doc == null) return;
 
+			//
+			// Fetch the selected bit of code
+			//
 			var sel = (TextSelection)doc.Selection;
 			var p = sel.ActivePoint;
 			var funcElm = (CodeFunction2)p.CodeElement[vsCMElement.vsCMElementFunction];
@@ -63,8 +71,21 @@ namespace QuickTest
 				}
 			}
 
+			//
+			// Make sure it's .NET (C# and VB)
+			//
+			if (funcElm != null) {
+				if (funcElm.Language != CodeModelLanguageConstants.vsCMLanguageCSharp &&
+					funcElm.Language != CodeModelLanguageConstants.vsCMLanguageVB) {
+					funcElm = null;
+				}
+			}
+
 			if (funcElm == null) return;
 
+			//
+			// Handle it
+			//
 			var newFunc = false;
 
 			if (_funcElm == null || GetMemberName (funcElm) != _tests.Member) {
@@ -685,15 +706,20 @@ namespace QuickTest
 
 		private void Grid_CellEndEdit (object sender, DataGridViewCellEventArgs e)
 		{
-			if (_funcElm == null) return;
+			try {
+				if (_funcElm == null) return;
 
-			var row = Grid.Rows[e.RowIndex];
+				var row = Grid.Rows[e.RowIndex];
 
-			if (e.ColumnIndex == _resultColIndex) {
-				row.Cells[_expectedColIndex].Value = row.Cells[_resultColIndex].Value;
+				if (e.ColumnIndex == _resultColIndex) {
+					row.Cells[_expectedColIndex].Value = row.Cells[_resultColIndex].Value;
+				}
+
+				RunRows (new[] { e.RowIndex });
 			}
-			
-			RunRows (new[] { e.RowIndex });
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
+			}
 		}
 
 		private void Grid_RowsAdded (object sender, DataGridViewRowsAddedEventArgs e)
@@ -706,68 +732,78 @@ namespace QuickTest
 
 		private void deleteTestToolStripMenuItem_Click (object sender, EventArgs e)
 		{
-			var rowIndexes = Grid.SelectedCells.Cast<DataGridViewCell> ().Select (x => x.RowIndex).Distinct ();
-			var tests = (from i in rowIndexes
-						 let row = Grid.Rows[i]
-						 let t = row.Tag as Test
-						 where t != null
-						 select new { Row = row, Test = t, }).ToArray ();
+			try {
+				var rowIndexes = Grid.SelectedCells.Cast<DataGridViewCell> ().Select (x => x.RowIndex).Distinct ();
+				var tests = (from i in rowIndexes
+							 let row = Grid.Rows[i]
+							 let t = row.Tag as Test
+							 where t != null
+							 select new { Row = row, Test = t, }).ToArray ();
 
-			foreach (var t in tests) {
-				_tests.Tests.Remove (t.Test);
-				Grid.Rows.Remove (t.Row);
+				foreach (var t in tests) {
+					_tests.Tests.Remove (t.Test);
+					Grid.Rows.Remove (t.Row);
+				}
+				UpdateStats ();
 			}
-			UpdateStats ();
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
+			}
 		}
 
 		private void Grid_KeyDown (object sender, KeyEventArgs e)
 		{
-			if (e.Control && e.KeyCode == Keys.V) {
-				int rowIndex = 0;
-				int colIndex = 0;
-				if (Grid.SelectedCells.Count > 0) {
-					rowIndex = int.MaxValue;
-					colIndex = int.MaxValue;
+			try {
+				if (e.Control && e.KeyCode == Keys.V) {
+					int rowIndex = 0;
+					int colIndex = 0;
+					if (Grid.SelectedCells.Count > 0) {
+						rowIndex = int.MaxValue;
+						colIndex = int.MaxValue;
+						foreach (DataGridViewCell c in Grid.SelectedCells) {
+							rowIndex = Math.Min (c.RowIndex, rowIndex);
+							colIndex = Math.Min (c.ColumnIndex, colIndex);
+						}
+					}
+					PasteAt (rowIndex, colIndex);
+				}
+				else if (e.Control && e.KeyCode == Keys.C) {
+					if (Grid.SelectedCells.Count == 0) return;
+
+					var minRowIndex = int.MaxValue;
+					var minColIndex = int.MaxValue;
+					var maxRowIndex = int.MinValue;
+					var maxColIndex = int.MinValue;
 					foreach (DataGridViewCell c in Grid.SelectedCells) {
-						rowIndex = Math.Min (c.RowIndex, rowIndex);
-						colIndex = Math.Min (c.ColumnIndex, colIndex);
+						minRowIndex = Math.Min (c.RowIndex, minRowIndex);
+						minColIndex = Math.Min (c.ColumnIndex, minColIndex);
+						maxRowIndex = Math.Max (c.RowIndex, maxRowIndex);
+						maxColIndex = Math.Max (c.ColumnIndex, maxColIndex);
 					}
-				}
-				PasteAt (rowIndex, colIndex);
-			}
-			else if (e.Control && e.KeyCode == Keys.C) {
-				if (Grid.SelectedCells.Count == 0) return;
 
-				var minRowIndex = int.MaxValue;
-				var minColIndex = int.MaxValue;
-				var maxRowIndex = int.MinValue;
-				var maxColIndex = int.MinValue;
-				foreach (DataGridViewCell c in Grid.SelectedCells) {
-					minRowIndex = Math.Min (c.RowIndex, minRowIndex);
-					minColIndex = Math.Min (c.ColumnIndex, minColIndex);
-					maxRowIndex = Math.Max (c.RowIndex, maxRowIndex);
-					maxColIndex = Math.Max (c.ColumnIndex, maxColIndex);
-				}
+					var m = new StringMatrix (maxRowIndex - minRowIndex + 1, maxColIndex - minColIndex + 1);
 
-				var m = new StringMatrix (maxRowIndex - minRowIndex + 1, maxColIndex - minColIndex + 1);
-
-				foreach (DataGridViewCell c in Grid.SelectedCells) {
-					var mri = c.RowIndex - minRowIndex;
-					var mci = c.ColumnIndex - minColIndex;
-					m.Rows[mri][mci] = GetCellText (c);
-				}
-
-				Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
-			}
-			else if (e.KeyCode == Keys.Delete) {
-				var rows = new List<int> ();
-				foreach (DataGridViewCell c in Grid.SelectedCells) {
-					if (!Grid.Columns[c.ColumnIndex].ReadOnly) {
-						rows.Add (c.RowIndex);
-						c.Value = null;
+					foreach (DataGridViewCell c in Grid.SelectedCells) {
+						var mri = c.RowIndex - minRowIndex;
+						var mci = c.ColumnIndex - minColIndex;
+						m.Rows[mri][mci] = GetCellText (c);
 					}
+
+					Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
 				}
-				RunRows (rows.Distinct ());
+				else if (e.KeyCode == Keys.Delete) {
+					var rows = new List<int> ();
+					foreach (DataGridViewCell c in Grid.SelectedCells) {
+						if (!Grid.Columns[c.ColumnIndex].ReadOnly) {
+							rows.Add (c.RowIndex);
+							c.Value = null;
+						}
+					}
+					RunRows (rows.Distinct ());
+				}
+			}
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
 			}
 		}
 
@@ -805,7 +841,12 @@ namespace QuickTest
 
 		private void StatusButton_Click (object sender, EventArgs e)
 		{
-			RunAllRows ();
+			try {
+				RunAllRows ();
+			}
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
+			}
 		}
 
 		private void Grid_DoubleClick (object sender, EventArgs e)
@@ -833,14 +874,20 @@ namespace QuickTest
 					}
 				}
 			}
-			catch (Exception) {
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
 			}
 		}
 
 		private void UpdateTimer_Tick (object sender, EventArgs e)
 		{
-			if (this.Visible) {
-				SyncWithCode (forceRun: false);
+			try {
+				if (this.Visible) {
+					SyncWithCode (forceRun: false);
+				}
+			}
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
 			}
 		}
 	}
