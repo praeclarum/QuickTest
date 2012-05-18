@@ -1,7 +1,10 @@
 *.suo
 *.user
+*.userprefs
 QuickTestVS/bin/
 QuickTestVS/obj/
+QuickTestMD/bin/
+QuickTestMD/obj/
 QuickTestTest/bin/
 QuickTestTest/obj/
 QuickTestRunner/bin/
