@@ -59,6 +59,7 @@
 			this.Grid.Location = new System.Drawing.Point(0, 53);
 			this.Grid.Name = "Grid";
 			this.Grid.RowHeadersWidth = 24;
+			this.Grid.RowTemplate.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.TopLeft;
 			this.Grid.RowTemplate.Height = 20;
 			this.Grid.Size = new System.Drawing.Size(322, 274);
 			this.Grid.TabIndex = 2;

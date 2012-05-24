@@ -654,7 +654,12 @@ namespace QuickTest
 				MinimumWidth = 20,
 				ReadOnly = true,
 				Image = AllImages.Images[NewStatusIcon],
-				CellTemplate = new DefaultImageCell { Image = AllImages.Images[NewStatusIcon], },
+				CellTemplate = new DefaultImageCell {
+					Image = AllImages.Images[NewStatusIcon],
+					Style = new DataGridViewCellStyle {
+						Alignment = DataGridViewContentAlignment.TopCenter,
+					},
+				},
 			});
 
 			//
