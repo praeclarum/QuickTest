@@ -555,6 +555,15 @@ namespace QuickTest
 			BindRow (Grid.Rows[rowIndex]);
 		}
 
+		static string TrimCellText (string text)
+		{
+			var t = text;
+			if (t.Length > 140) {
+				t = t.Substring (0, 140) + "...";
+			}
+			return t;
+		}
+
 		void BindRow (DataGridViewRow row)
 		{
 			var vals = new object[Grid.Columns.Count];
@@ -588,7 +597,7 @@ namespace QuickTest
 
 			vals[_assertColIndex] = t.AssertString;
 
-			vals[_failColIndex] = t.FailInfo;
+			vals[_failColIndex] = TrimCellText (t.FailInfo);
 
 			row.SetValues (vals);
 		}
@@ -741,10 +750,6 @@ namespace QuickTest
 				if (_funcElm == null) return;
 
 				var row = Grid.Rows[e.RowIndex];
-
-				if (e.ColumnIndex == _resultColIndex) {
-					row.Cells[_expectedColIndex].Value = row.Cells[_resultColIndex].Value;
-				}
 
 				RunRows (new[] { e.RowIndex });
 			}
