@@ -481,7 +481,12 @@ namespace QuickTest
 		object CreateObject (Type objType, string expressionText, EvalEnv env)
 		{
 			if (string.IsNullOrEmpty (expressionText)) {
-				return Activator.CreateInstance (objType);
+				if (objType == typeof (string)) {
+					return string.Empty;
+				}
+				else {
+					return Activator.CreateInstance (objType);
+				}
 			}
 			else {
 				var expr = Expression.Parse (expressionText);
