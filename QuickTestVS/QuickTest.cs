@@ -297,9 +297,23 @@ namespace QuickTest
 
 		public TestResult Result { get; set; }
 		public DateTime ResultTimeUtc { get; set; }
-		public string ValueString { get; set; }
-		public string ValueType { get; set; }
 		public string FailInfo { get; set; }
+		public ObjectDump ThisDump { get; set; }
+		public ObjectDump ValueDump { get; set; }
+
+		[XmlIgnore]
+		public string ValueString
+		{
+			get
+			{
+				if (ValueDump != null) {
+					return ValueDump.ToStringValue;
+				}
+				else {
+					return "";
+				}
+			}
+		}
 
 		object _value;
 		[XmlIgnore]
@@ -312,8 +326,7 @@ namespace QuickTest
 			set
 			{
 				_value = value;
-				ValueString = GetValueString (_value);
-				ValueType = GetTypeString (_value);
+				ValueDump = new ObjectDump (_value);
 			}
 		}
 
@@ -335,26 +348,6 @@ namespace QuickTest
 			return a;
 		}
 		
-		public static string GetValueString (object value)
-		{
-			if (value != null) {
-				return Convert.ToString (value, CultureInfo.InvariantCulture);
-			}
-			else {
-				return "null";
-			}
-		}
-
-		public static string GetTypeString (object value)
-		{
-			if (value != null) {
-				return value.GetType ().FullName;
-			}
-			else {
-				return typeof(object).FullName;
-			}
-		}
-
 		public void Run ()
 		{
 			var name = Member;
@@ -598,8 +591,8 @@ namespace QuickTest
 		{
 			Result = r.Result;
 			ResultTimeUtc = r.ResultTimeUtc;
-			ValueString = r.ValueString;
-			ValueType = r.ValueType;
+			ValueDump = r.ValueDump;
+			ThisDump = r.ThisDump;
 			FailInfo = r.FailInfo;
 		}
 
@@ -625,6 +618,38 @@ namespace QuickTest
 
 			return null;
 		}
+	}
+
+	[Serializable]
+	public class ObjectDump
+	{
+		public string ToStringValue { get; set; }
+		public List<PropertyDump> Properties { get; set; }
+		public ObjectDump ()
+		{
+			Properties = new List<PropertyDump> ();
+		}
+		public ObjectDump (object obj)
+			: this ()
+		{
+			ToStringValue = GetValueString (obj);
+		}
+		static string GetValueString (object value)
+		{
+			if (value != null) {
+				return Convert.ToString (value, CultureInfo.InvariantCulture);
+			}
+			else {
+				return "null";
+			}
+		}
+	}
+
+	[Serializable]
+	public class PropertyDump
+	{
+		public string Name { get; set; }
+		public string ToStringValue { get; set; }
 	}
 
 	public class CodeReference

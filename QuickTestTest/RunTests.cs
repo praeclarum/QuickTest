@@ -45,6 +45,14 @@ namespace QuickTest.Tests
 				Location = loc;
 			}
 
+			public void SetHome ()
+			{
+				var loc = new Location ();
+				loc.Lat = 50;
+				loc.Lon = -120;
+				Location = loc;
+			}
+
 			public double Personality { get; set; }
 
 			public double GetPersonality () { return Personality; }
