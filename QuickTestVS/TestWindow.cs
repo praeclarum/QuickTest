@@ -805,28 +805,18 @@ namespace QuickTest
 					e.Handled = true;
 				}
 				else if (e.Control && e.KeyCode == Keys.C) {
-					if (Grid.SelectedCells.Count == 0) return;
-
-					var minRowIndex = int.MaxValue;
-					var minColIndex = int.MaxValue;
-					var maxRowIndex = int.MinValue;
-					var maxColIndex = int.MinValue;
+					Copy (cut: false);
+					e.Handled = true;
+				}
+				else if (e.Control && e.KeyCode == Keys.X) {
+					var rows = new List<int> ();
 					foreach (DataGridViewCell c in Grid.SelectedCells) {
-						minRowIndex = Math.Min (c.RowIndex, minRowIndex);
-						minColIndex = Math.Min (c.ColumnIndex, minColIndex);
-						maxRowIndex = Math.Max (c.RowIndex, maxRowIndex);
-						maxColIndex = Math.Max (c.ColumnIndex, maxColIndex);
+						if (!Grid.Columns[c.ColumnIndex].ReadOnly) {
+							rows.Add (c.RowIndex);
+						}
 					}
-
-					var m = new StringMatrix (maxRowIndex - minRowIndex + 1, maxColIndex - minColIndex + 1);
-
-					foreach (DataGridViewCell c in Grid.SelectedCells) {
-						var mri = c.RowIndex - minRowIndex;
-						var mci = c.ColumnIndex - minColIndex;
-						m.Rows[mri][mci] = GetCellText (c);
-					}
-
-					Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
+					Copy (cut: true);					
+					RunRows (rows.Distinct ());
 					e.Handled = true;
 				}
 				else if (e.KeyCode == Keys.Delete) {
@@ -852,6 +842,35 @@ namespace QuickTest
 			catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine (ex);
 			}
+		}
+
+		void Copy (bool cut)
+		{
+			if (Grid.SelectedCells.Count == 0) return;
+
+			var minRowIndex = int.MaxValue;
+			var minColIndex = int.MaxValue;
+			var maxRowIndex = int.MinValue;
+			var maxColIndex = int.MinValue;
+			foreach (DataGridViewCell c in Grid.SelectedCells) {
+				minRowIndex = Math.Min (c.RowIndex, minRowIndex);
+				minColIndex = Math.Min (c.ColumnIndex, minColIndex);
+				maxRowIndex = Math.Max (c.RowIndex, maxRowIndex);
+				maxColIndex = Math.Max (c.ColumnIndex, maxColIndex);
+			}
+
+			var m = new StringMatrix (maxRowIndex - minRowIndex + 1, maxColIndex - minColIndex + 1);
+
+			foreach (DataGridViewCell c in Grid.SelectedCells) {
+				var mri = c.RowIndex - minRowIndex;
+				var mci = c.ColumnIndex - minColIndex;
+				m.Rows[mri][mci] = GetCellText (c);
+				if (cut && !c.ReadOnly) {
+					c.Value = null;
+				}
+			}
+
+			Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
 		}
 
 		void PasteAt (int rowIndex, int colIndex)
