@@ -60,6 +60,22 @@ namespace QuickTest
 		public string Member { get; set; }
 		public List<Test> Tests { get; set; }
 
+		DisplayInfo _displayInfo;
+		public DisplayInfo DisplayInfo
+		{
+			get
+			{
+				if (_displayInfo == null) {
+					_displayInfo = new DisplayInfo ();
+				}
+				return _displayInfo;
+			}
+			set
+			{
+				_displayInfo = value;
+			}
+		}
+
 		public MemberTests ()
 		{
 			Tests = new List<Test> ();
@@ -68,6 +84,52 @@ namespace QuickTest
 		public Test GetTest (Guid id)
 		{
 			return Tests.First (x => x.Id == id);
+		}
+	}
+
+	[Serializable]
+	public class DisplayInfo
+	{
+		public List<ColumnDisplayInfo> Columns { get; set; }
+
+		public DisplayInfo ()
+		{
+			Columns = new List<ColumnDisplayInfo> ();
+		}
+
+		public int GetColumnWidth (string name)
+		{
+			return GetColumn (name).Width;
+		}
+
+		public void SetColumnWidth (string name, int width)
+		{
+			GetColumn (name).Width = width;
+		}
+
+		ColumnDisplayInfo GetColumn (string name)
+		{
+			var c = Columns.FirstOrDefault (x => x.Name == name);
+			if (c == null) {
+				c = new ColumnDisplayInfo {
+					Name = name,
+				};
+				Columns.Add (c);
+			}
+			return c;
+		}
+	}
+
+	[Serializable]
+	public class ColumnDisplayInfo
+	{
+		public string Name { get; set; }
+		public int Width { get; set; }
+
+		public ColumnDisplayInfo ()
+		{
+			Name = "";
+			Width = 100;
 		}
 	}
 

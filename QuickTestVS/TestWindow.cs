@@ -739,9 +739,12 @@ namespace QuickTest
 			//
 			// Format
 			//
-			foreach (DataGridViewColumn col in Grid.Columns) {
+			_formattingCells = true;
+			foreach (var col in Grid.Columns.OfType<DataGridViewColumn> ().Skip (1)) {
 				col.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+				col.Width = _tests.DisplayInfo.GetColumnWidth (col.Name);
 			}
+			_formattingCells = false;
 		}
 
 		private void Grid_CellEndEdit (object sender, DataGridViewCellEventArgs e)
@@ -950,6 +953,22 @@ namespace QuickTest
 			try {
 				if (this.Visible) {
 					SyncWithCode (forceRun: false);
+				}
+			}
+			catch (Exception ex) {
+				System.Diagnostics.Debug.WriteLine (ex);
+			}
+		}
+
+		bool _formattingCells = false;
+
+		private void Grid_ColumnWidthChanged (object sender, DataGridViewColumnEventArgs e)
+		{
+			try {
+				if (_tests != null && !_formattingCells) {
+					var name = e.Column.Name;
+					var width = e.Column.Width;
+					_tests.DisplayInfo.SetColumnWidth (name, width);
 				}
 			}
 			catch (Exception ex) {

@@ -64,6 +64,7 @@
 			this.Grid.Size = new System.Drawing.Size(322, 274);
 			this.Grid.TabIndex = 2;
 			this.Grid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.Grid_CellEndEdit);
+			this.Grid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.Grid_ColumnWidthChanged);
 			this.Grid.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.Grid_RowsAdded);
 			this.Grid.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.Grid_RowsRemoved);
 			this.Grid.DoubleClick += new System.EventHandler(this.Grid_DoubleClick);
