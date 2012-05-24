@@ -802,6 +802,7 @@ namespace QuickTest
 						}
 					}
 					PasteAt (rowIndex, colIndex);
+					e.Handled = true;
 				}
 				else if (e.Control && e.KeyCode == Keys.C) {
 					if (Grid.SelectedCells.Count == 0) return;
@@ -826,6 +827,7 @@ namespace QuickTest
 					}
 
 					Clipboard.SetText (m.Tsv, TextDataFormat.UnicodeText);
+					e.Handled = true;
 				}
 				else if (e.KeyCode == Keys.Delete) {
 					var rows = new List<int> ();
@@ -836,6 +838,15 @@ namespace QuickTest
 						}
 					}
 					RunRows (rows.Distinct ());
+					e.Handled = true;
+				}
+				else if (e.Control && e.KeyCode == Keys.Return) {
+					var c = Grid.SelectedCells.OfType<DataGridViewCell> ().FirstOrDefault ();
+					if (c != null && !c.ReadOnly) {
+						Grid.CurrentCell = c;
+						Grid.BeginEdit (true);
+						e.Handled = true;
+					}
 				}
 			}
 			catch (Exception ex) {
